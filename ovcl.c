@@ -14,7 +14,7 @@
 #define _GNU_SOURCE
 #include <getopt.h>
 
-#include "ovsrvcli.h"
+#include "common.h"
 
 static char *buf;
 static int seq;

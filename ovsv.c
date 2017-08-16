@@ -9,7 +9,7 @@
 #define _GNU_SOURCE
 #include <getopt.h>
 
-#include "ovsrvcli.h"
+#include "common.h"
 
 static char debug_mode = 0;
 static char *page_buf;
