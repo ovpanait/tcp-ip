@@ -6,9 +6,14 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
+#define _GNU_SOURCE
+#include <getopt.h>
+
 #include "ovsrvcli.h"
 
-int main(int arcg, char **argv)
+static char debug_mode = 0;
+
+int main(int argc, char **argv)
 {
 	int ret;
 	
@@ -17,6 +22,25 @@ int main(int arcg, char **argv)
 	struct sockaddr_in server_addr;
 	struct sockaddr_in client_addr;
 
+	int opt;
+	struct option longopts[] = {
+		{"debug", 0, NULL, 'd'},
+		{0, 0, 0, 0} };
+
+	/* Command line parameters */
+	
+	while ((opt = getopt_long(argc, argv, ":d", longopts, NULL)) != -1)
+		switch (opt) {
+		case 'd':
+			debug_mode = 1;
+			break;
+		}
+
+	if (debug_mode)
+		printf("Debug mode activated.\n");
+	
+	/* Server side */
+		       
 	server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (server_fd == -1) {
 		perror("Socket");
