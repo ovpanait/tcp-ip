@@ -12,18 +12,23 @@
 #include "common.h"
 
 static char debug_mode = 0;
-static char *page_buf;
 
 int main(int argc, char **argv)
 {
 	int ret;
+
+	/* Page */
 	int page_size;
+
+	/* Server / Client */
 	
 	int server_fd, client_fd;
 	int server_len, client_len;
 	struct sockaddr_in server_addr;
 	struct sockaddr_in client_addr;
 
+	/* Command line */
+	
 	int opt;
 	struct option longopts[] = {
 		{"debug", 0, NULL, 'd'},
