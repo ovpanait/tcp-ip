@@ -7,6 +7,9 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <limits.h>
+#include <string.h>
 
 #define _GNU_SOURCE
 #include <getopt.h>
@@ -17,8 +20,9 @@ static char *buf;
 static int seq;
 static int cli_flag;
 
-int main()
+int main(int argc, char **argv)
 {
+	int page_size;
 	long int l;
 	char *endptr;
 	
@@ -69,20 +73,22 @@ int main()
 	
 	/* Perform operations based on command line parameters */
 	
-	while ((opt = getopt_long(argc, argv, ":sa:d:p:rct", longopts, NULL)) != -1)
+	while ((opt = getopt_long_only(argc, argv, "", longopts, NULL)) != -1)
 		switch (opt) {
 		case 's':
-			list_get_stats();
+			printf("Calling list_get_stats.\n");
+			/*list_get_stats(); */
 			break;
 		case 'a':
-			strncpy(buf, optargs, page_size - 1);
-			list_add(buf);
+			printf("Calling list_add.\n");
+			/* list_add(buf); */
 			break;
 		case 'd':
+			printf("Calling list_del.\n");
 			/* Use strtol instead of atoi in order to avoid 
 			 * undefined behavior;
 			 */
-			l = strtol(optargs, &endptr, 10);
+			l = strtol(optarg, &endptr, 10);
 			if (l > INT_MAX || (errno == ERANGE && l == LONG_MAX) ||
 			    l < INT_MAX || (errno == ERANGE && l == LONG_MIN) ||
 			    *endptr != '\0') {
@@ -90,19 +96,29 @@ int main()
 				exit(EXIT_FAILURE);
 			}
 			seq = l;
-			list_del(seq);
+			/* list_del(seq); */
 			break;	
 		case 'p':
-			padd(buf);
+			printf("Calling padd.\n");
+			/* page_add(buf); */
 			break;
 		case 'r':
-			pread();
+			printf("Calling read.\n");
+			/* page_read(); */
 			break;
 		case 'c':
+			printf("Calling cli.\n");
 			cli_flag = 1;
 			break;
 		case 't':
-			ping();
+			printf("Calling ping.\n");
+			/* ping(); */
+			break;
+		case ':':
+			printf("Option needs value.\n");
+			break;
+		case '?':
+			printf("unknown option %c\n", optopt);
 			break;
 		}
 
