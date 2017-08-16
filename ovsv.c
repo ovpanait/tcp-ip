@@ -12,10 +12,12 @@
 #include "ovsrvcli.h"
 
 static char debug_mode = 0;
+static char *page_buf;
 
 int main(int argc, char **argv)
 {
 	int ret;
+	int page_size;
 	
 	int server_fd, client_fd;
 	int server_len, client_len;
@@ -27,6 +29,15 @@ int main(int argc, char **argv)
 		{"debug", 0, NULL, 'd'},
 		{0, 0, 0, 0} };
 
+	/* Init stuff */
+	
+	page_size = getpagesize();
+	page_buf = malloc(page_size);
+	if (page_buf == NULL) {
+		fprintf(stderr, "Failed to allocate %d bytes.\n", page_size);
+		exit(EXIT_FAILURE);
+	}
+	
 	/* Command line parameters */
 	
 	while ((opt = getopt_long_only(argc, argv, ":d", longopts, NULL)) != -1)
