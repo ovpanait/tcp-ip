@@ -1,10 +1,12 @@
-OBJECTS = ovsv.o ovcl.o
+SV_OBJECTS = ovsv.o server_fc.o
+CL_OBJECTS = ovcl.o
 
-image:
-	gcc -o server ovsv.c
-	gcc -o client ovcl.c
+image: $(SV_OBJECTS) $(CL_OBJECTS)
+	gcc -o server $(SV_OBJECTS)
+	gcc -o client $(CL_OBJECTS)
 
 clean:
-	rm server client *.o
+	rm server client *.o 2> /dev/null
 
-$(OBJECTS): ovsrvcli.h
+$(SV_OBJECTS): common.h ovsv.h
+$(CL_OBJECTS): common.h ovcl.h

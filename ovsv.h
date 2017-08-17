@@ -10,7 +10,7 @@ enum {
 	page_index
 };
 	
-char *server_init(int *fd_arr, int buf_size);
+int server_init(int *fd_arr);
 void server_clean(char *page_buf, int *fd_arr);
 
 #endif

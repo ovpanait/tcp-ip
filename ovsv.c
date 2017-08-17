@@ -10,40 +10,33 @@
 #include <getopt.h>
 
 #include "common.h"
+#include "ovsv.h"
 
 static char debug_mode = 0;
 
 int main(int argc, char **argv)
 {
 	int ret;
-
-	/* Page */
-	int page_size;
-
-	/* Server / Client */
+	
+	/* Server-Client */
 	
 	int server_fd, client_fd;
 	int server_len, client_len;
 	struct sockaddr_in server_addr;
 	struct sockaddr_in client_addr;
 
+	/* Kernel module files */
+
+	int page_size;
+	int fd_arr[FD_ARR_COUNT];
+	char *buf;
+	
 	/* Command line */
 	
 	int opt;
 	struct option longopts[] = {
 		{"debug", 0, NULL, 'd'},
 		{0, 0, 0, 0} };
-
-	/* Init stuff */
-	
-	page_size = getpagesize();
-	page_buf = malloc(page_size);
-	if (page_buf == NULL) {
-		fprintf(stderr, "Failed to allocate %d bytes.\n", page_size);
-		exit(EXIT_FAILURE);
-	}
-	
-	/* Command line parameters */
 	
 	while ((opt = getopt_long_only(argc, argv, ":d", longopts, NULL)) != -1)
 		switch (opt) {
@@ -52,6 +45,11 @@ int main(int argc, char **argv)
 			break;
 		}
 
+	/* Init server */
+	
+	page_size = getpagesize();
+	server_init(fd_arr);
+	
 	if (debug_mode)
 		printf("Debug mode activated.\n");
 	
