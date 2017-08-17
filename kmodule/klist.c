@@ -276,6 +276,8 @@ static int __init klist_init(void)
 	struct dentry *fp;
 	ssize_t ret;
 
+	pr_debug("Entering function %s\n", __func__);
+	
 	ret = -ENOENT;
 
 	ov_dirp = debugfs_create_dir("ovidiu", NULL);
@@ -313,6 +315,7 @@ static int __init klist_init(void)
 		goto fail;
 	}
 
+	pr_debug("Function %s terminated successfully\n", __func__);
 	return 0;
 
 fail:
@@ -323,9 +326,11 @@ fail:
 
 static void __exit klist_exit(void)
 {
+	pr_debug("Entering function %s\n", __func__);
+	
 	entity_cleanall();
 	debugfs_remove_recursive(ov_dirp);
-	pr_debug("Job done\n");
+	pr_debug("Function %s terminated successfully\n", __func__);
 }
 
 module_init(klist_init);
