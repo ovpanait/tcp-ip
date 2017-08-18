@@ -6,7 +6,7 @@ image: $(SV_OBJECTS) $(CL_OBJECTS)
 	gcc -o client $(CL_OBJECTS)
 
 clean:
-	rm server client *.o 2> /dev/null
+	-rm server client *.o 2> /dev/null
 
 $(SV_OBJECTS) $(CL_OBJECTS): helpers.c
 helpers.c : helpers.h
