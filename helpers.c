@@ -66,14 +66,31 @@ void server_clean(char *page_buf, int *fd_arr)
 
 int stats_rq(int sock_fd)
 {
+	struct net_data data;
 	printf("Entering function: %s.\n", __func__);
 	
-	struct net_data data;
 	net_data_init(&data, LIST_STATS_ID, NULL);
 	send_net_data(&data, sock_fd);
 
+	printf("Exiting function: %s.\n", __func__);
+	
 	return 0;
 }
+
+int add_rq(char *msg, int sock_fd)
+{
+	struct net_data data;
+		
+	printf("Entering function: %s.\n", __func__);
+
+	net_data_init(&data, LIST_ADD_ID, msg);
+	send_net_data(&data, sock_fd);
+
+	printf("Exiting function: %s.\n", __func__);
+
+	return 0;
+}
+
 
 /* Common */
 
@@ -99,7 +116,7 @@ int net_data_init(struct net_data *data, short command_id, char *payload)
 
 int send_net_data(struct net_data *data, int sock_fd)
 {
-	uint8_t *buf;
+	uint8_t *buf, *buf_tmp;
 	size_t data_len;
 	ssize_t ret;
 	
@@ -109,7 +126,10 @@ int send_net_data(struct net_data *data, int sock_fd)
 		fprintf(stderr, "Failed to allocate %lu bytes.\n", data_len);
 		exit(EXIT_FAILURE);
 	}
-	
+	buf_tmp = buf; /* Save this address for later use.
+			* Perform pointer arithmetic on buf. 
+			*/
+
 	/* Serialization */
 	memcpy(buf, &data->header, sizeof(data->header));
 	buf += sizeof(data->header);
@@ -117,13 +137,12 @@ int send_net_data(struct net_data *data, int sock_fd)
 	memcpy(buf, &data->message_size, sizeof(data->message_size));
 	buf += sizeof(data->message_size);
 
-	if (data->message_size > 0) {
+	if (data->message_size > 0)
 		memcpy(buf, data->payload, data->message_size);
-		buf += data->message_size;
-	}
-	
+
 	/* Send serialized data through socket */
-	while (data_len != 0 && (ret = write(sock_fd, buf - data_len, data_len)) != 0) {
+	buf = buf_tmp; /* Reset to old value */
+	while (data_len != 0 && (ret = write(sock_fd, buf, data_len)) != 0) {
 		if (ret == -1) {
 			if (errno == EINTR)
 				continue;
@@ -138,7 +157,7 @@ int send_net_data(struct net_data *data, int sock_fd)
 	}
 
 	/* Cleanup */
-	kfree(buf);
+	free(buf_tmp);
 	
 	return 0;
 }

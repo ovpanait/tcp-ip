@@ -81,7 +81,8 @@ int main(int argc, char **argv)
 			break;
 		case 'a':
 			printf("Calling list_add.\n");
-			/* list_add(buf); */
+			printf("-add argument: %s\n", optarg);
+			/* add_rq(optarg, sockfd); */
 			break;
 		case 'd':
 			printf("Calling list_del.\n");
