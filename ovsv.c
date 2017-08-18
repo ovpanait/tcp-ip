@@ -76,7 +76,7 @@ int main(int argc, char **argv)
 	}
 
 	while(1) {
-		char ch;
+		struct net_data data;
 		
 		printf("Server waiting.\n");
 
@@ -84,11 +84,13 @@ int main(int argc, char **argv)
 		client_fd = accept(server_fd, (struct sockaddr *)&client_addr,
 				   &client_len);
 
-		read(client_fd, &ch, 1);
-		ch++;
-		write(client_fd, &ch, 1);
+		if (get_net_data(&data, client_fd) != 0) {
+			fprintf(stderr, "Error occurred on get_net_data.\n");
+		}
+		else {
+			printf("COMMAND ID: %x.\n", GET_CMD_ID(data.header));
+		}
 		close(client_fd);
-		
 	}
 	
 	return 0;

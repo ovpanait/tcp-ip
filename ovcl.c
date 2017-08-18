@@ -77,7 +77,7 @@ int main(int argc, char **argv)
 		switch (opt) {
 		case 's':
 			printf("Calling list_get_stats.\n");
-			/*list_get_stats(); */
+			stats_rq(sockfd);
 			break;
 		case 'a':
 			printf("Calling list_add.\n");

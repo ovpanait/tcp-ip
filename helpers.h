@@ -6,6 +6,10 @@
 #define QUEUE_SIZE 5
 
 #define MAGIC_NR 0x123
+#define GET_MAGIC(x) \
+	((x) & ((1 << 16) - 1))
+#define GET_CMD_ID(x) \
+	((x) >> 16)
 
 #define LIST_ADD_ID 0x1
 #define LIST_STATS_ID 0x2
@@ -30,9 +34,11 @@ struct net_data {
 };
 
 /* Prototypes */
-void *serialize(struct net_data *data);
 int server_init(int *fd_arr);
 void server_clean(char *page_buf, int *fd_arr);
 int net_data_init(struct net_data *data, short command_id, char *payload);
+int send_net_data(struct net_data *data, int sock_fd);
+int stats_rq(int sock_fd);
+int get_net_data(struct net_data *data, int sock_fd);
 
 #endif
