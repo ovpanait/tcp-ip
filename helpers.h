@@ -38,7 +38,14 @@ int server_init(int *fd_arr);
 void server_clean(char *page_buf, int *fd_arr);
 int net_data_init(struct net_data *data, short command_id, char *payload);
 int send_net_data(struct net_data *data, int sock_fd);
+
 int stats_rq(int sock_fd);
+int add_rq(char *msg, int sock_fd);
+int ping_rq(int sock_fd);
+int pread_rq(int sock_fd);
+int padd_rq(char *msg, int sock_fd);
+int del_rq(char *msg, int sockf_fd);
+	
 int get_net_data(struct net_data *data, int sock_fd);
 
 #endif

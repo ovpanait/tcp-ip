@@ -91,6 +91,61 @@ int add_rq(char *msg, int sock_fd)
 	return 0;
 }
 
+int del_rq(char *msg, int sock_fd)
+{
+	struct net_data data;
+		
+	printf("Entering function: %s.\n", __func__);
+
+	net_data_init(&data, LIST_DEL_ID, msg);
+	send_net_data(&data, sock_fd);
+
+	printf("Exiting function: %s.\n", __func__);
+
+	return 0;
+}
+
+int padd_rq(char *msg, int sock_fd)
+{
+	struct net_data data;
+		
+	printf("Entering function: %s.\n", __func__);
+
+	net_data_init(&data, PADD_ID, msg);
+	send_net_data(&data, sock_fd);
+
+	printf("Exiting function: %s.\n", __func__);
+
+	return 0;
+}
+
+int pread_rq(int sock_fd)
+{
+	struct net_data data;
+		
+	printf("Entering function: %s.\n", __func__);
+
+	net_data_init(&data, PREAD_ID, NULL);
+	send_net_data(&data, sock_fd);
+
+	printf("Exiting function: %s.\n", __func__);
+
+	return 0;
+}
+
+int ping_rq(int sock_fd)
+{
+	struct net_data data;
+		
+	printf("Entering function: %s.\n", __func__);
+
+	net_data_init(&data, PING_ID, NULL);
+	send_net_data(&data, sock_fd);
+
+	printf("Exiting function: %s.\n", __func__);
+
+	return 0;
+}
 
 /* Common */
 
@@ -138,7 +193,7 @@ int send_net_data(struct net_data *data, int sock_fd)
 	buf += sizeof(data->message_size);
 
 	if (data->message_size > 0)
-		memcpy(buf, data->payload, data->message_size);
+		memcpy(buf, data->payload, data->message_size); 
 
 	/* Send serialized data through socket */
 	buf = buf_tmp; /* Reset to old value */

@@ -89,6 +89,8 @@ int main(int argc, char **argv)
 		}
 		else {
 			printf("COMMAND ID: %x.\n", GET_CMD_ID(data.header));
+			if (data.message_size != 0)
+				printf("Payload received: %s\n", data.payload);
 		}
 		close(client_fd);
 	}
