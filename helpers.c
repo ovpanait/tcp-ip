@@ -122,8 +122,6 @@ int send_net_data(struct net_data *data, int sock_fd)
 		buf += data->message_size;
 	}
 	
-	printf("Sending buf : %s", buf);
-	
 	/* Send serialized data through socket */
 	while (data_len != 0 && (ret = write(sock_fd, buf - data_len, data_len)) != 0) {
 		if (ret == -1) {
@@ -139,6 +137,9 @@ int send_net_data(struct net_data *data, int sock_fd)
 		buf += ret;
 	}
 
+	/* Cleanup */
+	kfree(buf);
+	
 	return 0;
 }
 
