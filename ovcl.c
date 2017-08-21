@@ -1,7 +1,6 @@
-/*  Make the necessary includes and set up the variables.  */
-
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/select.h>
 #include <stdio.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -16,22 +15,27 @@
 
 #include "helpers.h"
 
+#define MAX_FD 1024
+
 static char *buf;
 static int seq;
 static int cli_flag;
 
 int main(int argc, char **argv)
 {
-	int page_size;
+	/* Auxiliary */
 	long int l;
 	char *endptr;
-	
+
+	/* File descriptors */
+	struct net_data data_arr[MAX_FD];
+	int len, i;
 	int sock_fd;
-	int len;
 	struct sockaddr_in address;
 	int result;
-	char ch = 'A';
-
+	fd_set readfds;
+	
+	/* Command line parameter parsing */
 	int opt;
 	struct option longopts[] = {
 		{"stats", 0, NULL, 's'},
@@ -50,6 +54,7 @@ int main(int argc, char **argv)
 	address.sin_port = htons(9734);
 	len = sizeof(address);
 
+	i = 0;
 	page_size = getpagesize();
 	buf = malloc(page_size);
 	if (buf == NULL) {
@@ -61,11 +66,8 @@ int main(int argc, char **argv)
 	/* Perform operations based on command line parameters */
 	
 	while ((opt = getopt_long_only(argc, argv, "", longopts, NULL)) != -1) {
-		/*  Create a socket for the client and connect to it.  */
 		sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-
 		result = connect(sock_fd, (struct sockaddr *)&address, len);
-
 		if(result == -1) {
 			perror("connect");
 			exit(EXIT_FAILURE);
@@ -74,11 +76,11 @@ int main(int argc, char **argv)
 		switch (opt) {
 		case 's':
 			printf("Calling list_get_stats.\n");
-			stats_rq(sock_fd);
+			stats_rq(data_arr + i, sock_fd);
 			break;
 		case 'a':
 			printf("Calling list_add.\n");
-			add_rq(optarg, sock_fd);
+			add_rq(data_arr, optarg, sock_fd);
 			break;
 		case 'd':
 			printf("Calling list_del.\n");
@@ -93,15 +95,15 @@ int main(int argc, char **argv)
 				exit(EXIT_FAILURE);
 			}
 			seq = l;
-			del_rq(optarg, sock_fd);
+			del_rq(data_arr + i, optarg, sock_fd);
 			break;	
 		case 'p':
 			printf("Calling padd.\n");
-			padd_rq(optarg, sock_fd);
+			padd_rq(data_arr + i, optarg, sock_fd);
 			break;
 		case 'r':
 			printf("Calling read.\n");
-			pread_rq(sock_fd);
+			pread_rq(data_arr + i, sock_fd);
 			break;
 		case 'c':
 			printf("Calling cli.\n");
@@ -109,7 +111,7 @@ int main(int argc, char **argv)
 			break;
 		case 't':
 			printf("Calling ping.\n");
-			ping_rq(sock_fd);
+			ping_rq(data_arr +i, sock_fd);
 			break;
 		case ':':
 			printf("Option needs value.\n");
@@ -118,18 +120,12 @@ int main(int argc, char **argv)
 			printf("unknown option %c\n", optopt);
 			break;
 		}
-
-		close(sock_fd);
+		++i;
 	}
 	
 	if (cli_flag) {
 		/* Start command line */
 		/*  We can now read/write via sock_fd.  */
-
-		write(sock_fd, &ch, 1);
-		read(sock_fd, &ch, 1);
-		printf("char from server = %c\n", ch);
-		close(sock_fd);
 	}
 	
 	return 0;

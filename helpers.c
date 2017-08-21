@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdint.h>
-#include "helpers.h"
 #include <unistd.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -10,12 +9,19 @@
 #include <string.h>
 #include <arpa/inet.h>
 
+#include "helpers.h"
+
+int page_size;
+
 /* Server side */
 
 int server_init(int *fd_arr)
 {
 	int ret;
-	
+	int server_fd;
+	int server_len;
+	struct sockaddr_in server_addr;
+
 	/* Open necessary files */
 
 	ret = chdir("/sys/kernel/debug/ovidiu");
@@ -49,6 +55,64 @@ int server_init(int *fd_arr)
 		exit(EXIT_FAILURE);
 	}
 
+	/* Server info */
+	server_fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (server_fd == -1) {
+		perror("Socket");
+		exit(EXIT_FAILURE);
+	}
+
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	server_addr.sin_port = htons(9734);
+	server_len = sizeof(server_addr);
+
+	if (bind(server_fd, (struct sockaddr *)&server_addr, server_len) != 0) {
+		perror("Bind");
+		exit(EXIT_FAILURE);
+	}
+
+	if (listen(server_fd, QUEUE_SIZE) != 0) {
+		perror("Listen");
+		exit(EXIT_FAILURE);
+	}
+
+	return server_fd;
+}
+
+int stats_send(struct net_data *data, char *buf, int *fd_arr)
+{
+	printf("Entering function: %s.\n", __func__);
+	
+	ssize_t ret;
+	size_t len;
+	int stats_fd;
+	char *buf_tmp;
+	
+	stats_fd = fd_arr[stats_index];
+	buf_tmp = buf;
+	len = page_size - 1;
+	
+	while (len != 0 && (ret = read(stats_fd, buf_tmp, len)) != 0) {
+		if (ret == -1) {
+			if (errno == EINTR)
+				continue;
+			perror("read");
+			break;
+		}
+
+		printf("ret: %d.\n", ret);
+		len -= ret;
+		buf_tmp += ret;
+	}
+	*buf_tmp = '\0';
+
+	data->payload = buf;
+	data->message_size = strlen(buf);
+	send_net_data(data);
+
+	printf("Exiting function: %s.\n", __func__);
+
 	return 0;
 }
 
@@ -64,83 +128,72 @@ void server_clean(char *page_buf, int *fd_arr)
 
 /* Client side */
 
-int stats_rq(int sock_fd)
+int stats_rq(struct net_data *data, int sock_fd)
 {
-	struct net_data data;
 	printf("Entering function: %s.\n", __func__);
 	
-	net_data_init(&data, LIST_STATS_ID, NULL);
-	send_net_data(&data, sock_fd);
+	net_data_init(data, LIST_STATS_ID, NULL, sock_fd);
+	send_net_data(data);
 
 	printf("Exiting function: %s.\n", __func__);
 	
 	return 0;
 }
 
-int add_rq(char *msg, int sock_fd)
+int add_rq(struct net_data *data, char *msg, int sock_fd)
 {
-	struct net_data data;
-		
 	printf("Entering function: %s.\n", __func__);
 
-	net_data_init(&data, LIST_ADD_ID, msg);
-	send_net_data(&data, sock_fd);
+	net_data_init(data, LIST_ADD_ID, msg, sock_fd);
+	send_net_data(data);
 
 	printf("Exiting function: %s.\n", __func__);
 
 	return 0;
 }
 
-int del_rq(char *msg, int sock_fd)
+int del_rq(struct net_data *data, char *msg, int sock_fd)
 {
-	struct net_data data;
-		
 	printf("Entering function: %s.\n", __func__);
 
-	net_data_init(&data, LIST_DEL_ID, msg);
-	send_net_data(&data, sock_fd);
+	net_data_init(data, LIST_DEL_ID, msg, sock_fd);
+	send_net_data(data);
 
 	printf("Exiting function: %s.\n", __func__);
 
 	return 0;
 }
 
-int padd_rq(char *msg, int sock_fd)
-{
-	struct net_data data;
-		
+int padd_rq(struct net_data *data, char *msg, int sock_fd)
+{		
 	printf("Entering function: %s.\n", __func__);
 
-	net_data_init(&data, PADD_ID, msg);
-	send_net_data(&data, sock_fd);
+	net_data_init(data, PADD_ID, msg, sock_fd);
+	send_net_data(data);
 
 	printf("Exiting function: %s.\n", __func__);
 
 	return 0;
 }
 
-int pread_rq(int sock_fd)
+int pread_rq(struct net_data *data, int sock_fd)
 {
-	struct net_data data;
-		
 	printf("Entering function: %s.\n", __func__);
 
-	net_data_init(&data, PREAD_ID, NULL);
-	send_net_data(&data, sock_fd);
+	net_data_init(data, PREAD_ID, NULL, sock_fd);
+	send_net_data(data);
 
 	printf("Exiting function: %s.\n", __func__);
 
 	return 0;
 }
 
-int ping_rq(int sock_fd)
-{
-	struct net_data data;
-		
+int ping_rq(struct net_data *data, int sock_fd)
+{		
 	printf("Entering function: %s.\n", __func__);
 
-	net_data_init(&data, PING_ID, NULL);
-	send_net_data(&data, sock_fd);
+	net_data_init(data, PING_ID, NULL, sock_fd);
+	send_net_data(data);
 
 	printf("Exiting function: %s.\n", __func__);
 
@@ -150,7 +203,7 @@ int ping_rq(int sock_fd)
 /* Common */
 
 /* Call with payload = NULL for commands that do not send data */
-int net_data_init(struct net_data *data, short command_id, char *payload)
+int net_data_init(struct net_data *data, short command_id, char *payload, int sock_fd)
 {
 	printf("Entering function: %s.\n", __func__);
 	
@@ -158,18 +211,18 @@ int net_data_init(struct net_data *data, short command_id, char *payload)
 	data->header |= ((uint32_t)command_id << 16);
 	printf("Filled net_data structure with data->header = %08x.\n", data->header);
 	data->header = htonl(data->header); /* Host to network endianness */
-	printf("Final data->header: %08x.\n", data->header);
 	
 	data->message_size = 0;
 	data->payload = payload;
 	if (payload != NULL)
 		data->message_size = strlen(payload);
 
+	data->fd = sock_fd;
+	
 	return 0;
 }
 
-
-int send_net_data(struct net_data *data, int sock_fd)
+int send_net_data(struct net_data *data)
 {
 	uint8_t *buf, *buf_tmp;
 	size_t data_len;
@@ -191,13 +244,13 @@ int send_net_data(struct net_data *data, int sock_fd)
 	
 	memcpy(buf, &data->message_size, sizeof(data->message_size));
 	buf += sizeof(data->message_size);
-
+	
 	if (data->message_size > 0)
-		memcpy(buf, data->payload, data->message_size); 
+		memcpy(buf, data->payload, data->message_size);
 
 	/* Send serialized data through socket */
 	buf = buf_tmp; /* Reset to old value */
-	while (data_len != 0 && (ret = write(sock_fd, buf, data_len)) != 0) {
+	while (data_len != 0 && (ret = write(data->fd, buf, data_len)) != 0) {
 		if (ret == -1) {
 			if (errno == EINTR)
 				continue;
@@ -265,7 +318,11 @@ int get_net_data(struct net_data *data, int sock_fd) {
 		len -= ret;
 		msg_size_buf += ret;
 	}
-	
+
+	/* Copy socket fd */
+	data->fd = sock_fd;
+	printf("data->fd: %d\n", data->fd);
+
 	/* Read payload, if any */
 
 	if (data->message_size == 0)

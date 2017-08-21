@@ -20,15 +20,14 @@ int main(int argc, char **argv)
 	pid_t pid;
 	
 	/* Server-Client */
-	
-	int server_fd, client_fd;
-	int server_len, client_len;
-	struct sockaddr_in server_addr;
-	struct sockaddr_in client_addr;
 
+	int server_fd;
+	int client_fd;
+	int client_len;
+	struct sockaddr_in client_addr;
+	
 	/* Kernel module files */
 
-	int page_size;
 	int fd_arr[FD_ARR_COUNT];
 	char *buf;
 	
@@ -46,41 +45,28 @@ int main(int argc, char **argv)
 			break;
 		}
 
-	/* Init server */
-	
+	/* Allocate buffer of size PAGE_SIZE */
 	page_size = getpagesize();
-	server_init(fd_arr);
-	
+	buf = malloc(page_size);
+	if (buf == NULL) {
+		fprintf(stderr, "Error allocating %d bytes.\n", page_size);
+		exit(EXIT_FAILURE);
+	}
+	buf[page_size - 1] = '\0';
+
+	/* Server initialization */
+	server_fd = server_init(fd_arr);
+
+	/* Activate debug mode, if necessary */
 	if (debug_mode)
 		printf("Debug mode activated.\n");
-	
-	/* Server side */
-		       
-	server_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (server_fd == -1) {
-		perror("Socket");
-		exit(EXIT_FAILURE);
-	}
 
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	server_addr.sin_port = htons(9734);
-	server_len = sizeof(server_addr);
-
-	if (bind(server_fd, (struct sockaddr *)&server_addr, server_len) != 0) {
-		perror("Bind");
-		exit(EXIT_FAILURE);
-	}
-
-	if (listen(server_fd, QUEUE_SIZE) != 0) {
-		perror("Listen");
-		exit(EXIT_FAILURE);
-	}
-
-	signal(SIGCHLD, SIG_IGN); /* Ignore child exit details */
+	/* Ignore child exit details */
+	signal(SIGCHLD, SIG_IGN);
 	
 	while(1) {
 		struct net_data data;
+		int cmd_id;
 		
 		printf("Server waiting.\n");
 
@@ -103,11 +89,24 @@ int main(int argc, char **argv)
 				fprintf(stderr, "Error occurred on get_net_data.\n");
 			}
 			else {
-				printf("COMMAND ID: %x.\n", GET_CMD_ID(data.header));
-				if (data.message_size != 0)
-					printf("Received payload.\n");
+			       cmd_id =  GET_CMD_ID(data.header);
+			       switch (cmd_id) {
+			       case LIST_ADD_ID:
+				       break;
+			       case LIST_STATS_ID:
+				       stats_send(&data, buf, fd_arr);
+				       break;
+			       case LIST_DEL_ID:
+				       break;
+			       case PADD_ID:
+				       break;
+			       case PREAD_ID:
+				       break;
+			       case PING_ID:
+				       break;
+			       }
 			}
-
+			
 			close(client_fd);
 			exit(EXIT_SUCCESS);
 		}
@@ -115,5 +114,5 @@ int main(int argc, char **argv)
 		close(client_fd);
 	}
 	
-	return 0;
+	return 0;	
 }

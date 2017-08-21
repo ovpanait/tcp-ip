@@ -31,21 +31,26 @@ struct net_data {
 	uint32_t header;
 	uint32_t message_size;
 	char *payload;
+	int fd;
 };
+
+extern int page_size;
 
 /* Prototypes */
 int server_init(int *fd_arr);
 void server_clean(char *page_buf, int *fd_arr);
-int net_data_init(struct net_data *data, short command_id, char *payload);
-int send_net_data(struct net_data *data, int sock_fd);
 
-int stats_rq(int sock_fd);
-int add_rq(char *msg, int sock_fd);
-int ping_rq(int sock_fd);
-int pread_rq(int sock_fd);
-int padd_rq(char *msg, int sock_fd);
-int del_rq(char *msg, int sockf_fd);
-	
+int net_data_init(struct net_data *data, short command_id, char *payload, int sock_fd);
+int send_net_data(struct net_data *data);
 int get_net_data(struct net_data *data, int sock_fd);
 
+int stats_rq(struct net_data *data, int sock_fd);
+int add_rq(struct net_data *data, char *msg, int sock_fd);
+int ping_rq(struct net_data *data, int sock_fd);
+int pread_rq(struct net_data *data, int sock_fd);
+int padd_rq(struct net_data *data, char *msg, int sock_fd);
+int del_rq(struct net_data *data, char *msg, int sockf_fd);
+
+int stats_send(struct net_data *data, char *buf, int *fd_arr);
+	
 #endif
