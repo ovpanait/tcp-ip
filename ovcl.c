@@ -26,7 +26,7 @@ int main(int argc, char **argv)
 	long int l;
 	char *endptr;
 	
-	int sockfd;
+	int sock_fd;
 	int len;
 	struct sockaddr_in address;
 	int result;
@@ -45,7 +45,7 @@ int main(int argc, char **argv)
 
 	/*  Create a socket for the client.  */
 
-	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 
 	/*  Name the socket, as agreed with the server.  */
 
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 
 	/*  Now connect our socket to the server's socket.  */
 
-	result = connect(sockfd, (struct sockaddr *)&address, len);
+	result = connect(sock_fd, (struct sockaddr *)&address, len);
 
 	if(result == -1) {
 		perror("oops: client3");
@@ -77,11 +77,11 @@ int main(int argc, char **argv)
 		switch (opt) {
 		case 's':
 			printf("Calling list_get_stats.\n");
-			stats_rq(sockfd);
+			stats_rq(sock_fd);
 			break;
 		case 'a':
 			printf("Calling list_add.\n");
-			add_rq(optarg, sockfd);
+			add_rq(optarg, sock_fd);
 			break;
 		case 'd':
 			printf("Calling list_del.\n");
@@ -96,15 +96,15 @@ int main(int argc, char **argv)
 				exit(EXIT_FAILURE);
 			}
 			seq = l;
-			/* list_del(seq); */
+			del_rq(optarg, sock_fd);
 			break;	
 		case 'p':
 			printf("Calling padd.\n");
-			/* page_add(buf); */
+			padd_rq(optarg, sock_fd);
 			break;
 		case 'r':
 			printf("Calling read.\n");
-			/* page_read(); */
+			pread_rq(sock_fd);
 			break;
 		case 'c':
 			printf("Calling cli.\n");
@@ -112,7 +112,7 @@ int main(int argc, char **argv)
 			break;
 		case 't':
 			printf("Calling ping.\n");
-			/* ping(); */
+			ping_rq(sock_fd);
 			break;
 		case ':':
 			printf("Option needs value.\n");
@@ -124,12 +124,12 @@ int main(int argc, char **argv)
 
 	if (cli_flag) {
 		/* Start command line */
-		/*  We can now read/write via sockfd.  */
+		/*  We can now read/write via sock_fd.  */
 
-		write(sockfd, &ch, 1);
-		read(sockfd, &ch, 1);
+		write(sock_fd, &ch, 1);
+		read(sock_fd, &ch, 1);
 		printf("char from server = %c\n", ch);
-		close(sockfd);
+		close(sock_fd);
 	}
 	
 	return 0;
