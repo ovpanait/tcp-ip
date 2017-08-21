@@ -3,8 +3,6 @@
 
 #include <sys/types.h>
 
-#define QUEUE_SIZE 5
-
 #define MAGIC_NR 0x123
 #define GET_MAGIC(x) \
 	((x) & ((1 << 16) - 1))
@@ -19,6 +17,8 @@
 #define PING_ID 0x6
 
 #define FD_ARR_COUNT 4
+#define QUEUE_SIZE 5
+#define TIMEOUT 5
 
 enum {
 	add_index,
@@ -31,7 +31,8 @@ struct net_data {
 	uint32_t header;
 	uint32_t message_size;
 	char *payload;
-	int fd;
+
+	int fd; /* The file descriptor the message is bound to */
 };
 
 extern int page_size;

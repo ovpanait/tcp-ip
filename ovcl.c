@@ -28,8 +28,7 @@ int main(int argc, char **argv)
 	char *endptr;
 
 	/* File descriptors */
-	struct net_data data_arr[MAX_FD];
-	int len, i;
+	int len;
 	int sock_fd;
 	struct sockaddr_in address;
 	int result;
@@ -54,7 +53,6 @@ int main(int argc, char **argv)
 	address.sin_port = htons(9734);
 	len = sizeof(address);
 
-	i = 0;
 	page_size = getpagesize();
 	buf = malloc(page_size);
 	if (buf == NULL) {
@@ -66,6 +64,8 @@ int main(int argc, char **argv)
 	/* Perform operations based on command line parameters */
 	
 	while ((opt = getopt_long_only(argc, argv, "", longopts, NULL)) != -1) {
+		struct net_data data;
+		
 		sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 		result = connect(sock_fd, (struct sockaddr *)&address, len);
 		if(result == -1) {
@@ -76,11 +76,11 @@ int main(int argc, char **argv)
 		switch (opt) {
 		case 's':
 			printf("Calling list_get_stats.\n");
-			stats_rq(data_arr + i, sock_fd);
+			stats_rq(&data, sock_fd);
 			break;
 		case 'a':
 			printf("Calling list_add.\n");
-			add_rq(data_arr, optarg, sock_fd);
+			add_rq(&data, optarg, sock_fd);
 			break;
 		case 'd':
 			printf("Calling list_del.\n");
@@ -95,15 +95,15 @@ int main(int argc, char **argv)
 				exit(EXIT_FAILURE);
 			}
 			seq = l;
-			del_rq(data_arr + i, optarg, sock_fd);
+			del_rq(&data, optarg, sock_fd);
 			break;	
 		case 'p':
 			printf("Calling padd.\n");
-			padd_rq(data_arr + i, optarg, sock_fd);
+			padd_rq(&data, optarg, sock_fd);
 			break;
 		case 'r':
 			printf("Calling read.\n");
-			pread_rq(data_arr + i, sock_fd);
+			pread_rq(&data, sock_fd);
 			break;
 		case 'c':
 			printf("Calling cli.\n");
@@ -111,7 +111,7 @@ int main(int argc, char **argv)
 			break;
 		case 't':
 			printf("Calling ping.\n");
-			ping_rq(data_arr +i, sock_fd);
+			ping_rq(&data, sock_fd);
 			break;
 		case ':':
 			printf("Option needs value.\n");
@@ -120,7 +120,8 @@ int main(int argc, char **argv)
 			printf("unknown option %c\n", optopt);
 			break;
 		}
-		++i;
+
+		 get_sync_answer(&data);
 	}
 	
 	if (cli_flag) {

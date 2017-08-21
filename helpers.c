@@ -101,14 +101,12 @@ int stats_send(struct net_data *data, char *buf, int *fd_arr)
 			break;
 		}
 
-		printf("ret: %d.\n", ret);
 		len -= ret;
 		buf_tmp += ret;
 	}
 	*buf_tmp = '\0';
 
-	data->payload = buf;
-	data->message_size = strlen(buf);
+	net_data_init(data, LIST_STATS_ID, buf, data->fd);
 	send_net_data(data);
 
 	printf("Exiting function: %s.\n", __func__);
@@ -198,6 +196,59 @@ int ping_rq(struct net_data *data, int sock_fd)
 	printf("Exiting function: %s.\n", __func__);
 
 	return 0;
+}
+
+/* Handle received messages synchronously */
+int get_sync_answer(struct net_data *data) {
+	short timeout;
+	fd_set read_fds;
+	int ret;
+	struct timeval tv;
+
+	printf("data->fd: %d\n", data->fd);
+	
+	timeout = TIMEOUT;
+	
+	FD_ZERO(&read_fds);
+	FD_SET(data->fd, &read_fds);
+	
+	while (timeout) {
+		ret = select(data->fd + 1, &read_fds, NULL, NULL, &tv);
+		if (ret == -1) {
+			perror("select");
+			exit(EXIT_FAILURE);
+		}
+		
+		if (FD_ISSET(data->fd, &read_fds) == 0) {
+			tv.tv_sec = 1;
+			tv.tv_usec = 0;
+	
+			--timeout;
+			printf("%d seconds until timeout.\n", timeout);
+		} else {
+			/* Received message from server */
+			ret = get_net_data(data, data->fd);
+			printf("data->header: %u\n", data->header);
+			if (ret == -1) {
+				printf("Magic number mismatch.\n");
+				/* Magic number mismatch */
+				/* TODO */
+				exit(EXIT_FAILURE);
+			}
+
+			/* The server will always send something back */
+			printf("%s\n", data->payload);
+
+			close(data->fd);
+			return 0;
+		}
+	}
+
+	/* Timeout occurred - TODO */
+	printf("Timeout\n");
+	
+	return -1;
+	
 }
 
 /* Common */
@@ -324,12 +375,11 @@ int get_net_data(struct net_data *data, int sock_fd) {
 	printf("data->fd: %d\n", data->fd);
 
 	/* Read payload, if any */
-
 	if (data->message_size == 0)
 		return 0;
 
 	len = data->message_size;
-	data->payload = malloc(len);
+	data->payload = malloc(len + 1);
 	if (data->payload == NULL) {
 		fprintf(stderr, "Error allocationg %lu bytes.\n", len);
 		exit(EXIT_FAILURE);
@@ -348,6 +398,7 @@ int get_net_data(struct net_data *data, int sock_fd) {
 		len -= ret;
 		buf += ret;
 	}
+	*buf = '\0';
 	
 	return 0;
 }

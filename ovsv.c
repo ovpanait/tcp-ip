@@ -90,6 +90,7 @@ int main(int argc, char **argv)
 			}
 			else {
 			       cmd_id =  GET_CMD_ID(data.header);
+
 			       switch (cmd_id) {
 			       case LIST_ADD_ID:
 				       break;
