@@ -43,25 +43,12 @@ int main(int argc, char **argv)
 		{"ping", 0, NULL, 't'},
 		{0, 0, 0, 0} };
 
-	/*  Create a socket for the client.  */
-
-	sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-
 	/*  Name the socket, as agreed with the server.  */
 
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = inet_addr("127.0.0.1");
 	address.sin_port = htons(9734);
 	len = sizeof(address);
-
-	/*  Now connect our socket to the server's socket.  */
-
-	result = connect(sock_fd, (struct sockaddr *)&address, len);
-
-	if(result == -1) {
-		perror("oops: client3");
-		exit(1);
-	}
 
 	page_size = getpagesize();
 	buf = malloc(page_size);
@@ -73,7 +60,17 @@ int main(int argc, char **argv)
 	
 	/* Perform operations based on command line parameters */
 	
-	while ((opt = getopt_long_only(argc, argv, "", longopts, NULL)) != -1)
+	while ((opt = getopt_long_only(argc, argv, "", longopts, NULL)) != -1) {
+		/*  Create a socket for the client and connect to it.  */
+		sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+
+		result = connect(sock_fd, (struct sockaddr *)&address, len);
+
+		if(result == -1) {
+			perror("connect");
+			exit(EXIT_FAILURE);
+		}
+
 		switch (opt) {
 		case 's':
 			printf("Calling list_get_stats.\n");
@@ -122,6 +119,9 @@ int main(int argc, char **argv)
 			break;
 		}
 
+		close(sock_fd);
+	}
+	
 	if (cli_flag) {
 		/* Start command line */
 		/*  We can now read/write via sock_fd.  */

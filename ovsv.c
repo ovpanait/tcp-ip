@@ -5,6 +5,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <signal.h>
 
 #define _GNU_SOURCE
 #include <getopt.h>
@@ -16,6 +17,7 @@ static char debug_mode = 0;
 int main(int argc, char **argv)
 {
 	int ret;
+	pid_t pid;
 	
 	/* Server-Client */
 	
@@ -75,6 +77,8 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
+	signal(SIGCHLD, SIG_IGN); /* Ignore child exit details */
+	
 	while(1) {
 		struct net_data data;
 		
@@ -84,14 +88,30 @@ int main(int argc, char **argv)
 		client_fd = accept(server_fd, (struct sockaddr *)&client_addr,
 				   &client_len);
 
-		if (get_net_data(&data, client_fd) != 0) {
-			fprintf(stderr, "Error occurred on get_net_data.\n");
+		pid = fork();
+		if (pid == -1) {
+			perror("fork");
+			exit(EXIT_FAILURE);
 		}
-		else {
-			printf("COMMAND ID: %x.\n", GET_CMD_ID(data.header));
-			if (data.message_size != 0)
-				printf("Payload received: %s\n", data.payload);
+		
+		if (pid == 0) {
+			/* Child - handle client request */
+
+			printf("Entered child process.\n");
+			
+			if (get_net_data(&data, client_fd) != 0) {
+				fprintf(stderr, "Error occurred on get_net_data.\n");
+			}
+			else {
+				printf("COMMAND ID: %x.\n", GET_CMD_ID(data.header));
+				if (data.message_size != 0)
+					printf("Received payload.\n");
+			}
+
+			close(client_fd);
+			exit(EXIT_SUCCESS);
 		}
+		printf("Parent process: closing fd.\n");
 		close(client_fd);
 	}
 	
