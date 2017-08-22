@@ -18,18 +18,14 @@ int main(int argc, char **argv)
 {
 	int ret;
 	pid_t pid;
-	
+	char *buf;
+		
 	/* Server-Client */
 
 	int server_fd;
 	int client_fd;
 	int client_len;
 	struct sockaddr_in client_addr;
-	
-	/* Kernel module files */
-
-	int fd_arr[FD_ARR_COUNT];
-	char *buf;
 	
 	/* Command line */
 	
@@ -55,7 +51,7 @@ int main(int argc, char **argv)
 	buf[page_size - 1] = '\0';
 
 	/* Server initialization */
-	server_fd = server_init(fd_arr);
+	server_fd = server_init();
 
 	/* Activate debug mode, if necessary */
 	if (debug_mode)
@@ -95,7 +91,7 @@ int main(int argc, char **argv)
 			       case LIST_ADD_ID:
 				       break;
 			       case LIST_STATS_ID:
-				       stats_send(&data, buf, fd_arr);
+				       stats_send(&data, buf);
 				       break;
 			       case LIST_DEL_ID:
 				       break;

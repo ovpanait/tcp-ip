@@ -15,14 +15,14 @@ int page_size;
 
 /* Server side */
 
-int server_init(int *fd_arr)
+int server_init(void)
 {
 	int ret;
 	int server_fd;
 	int server_len;
 	struct sockaddr_in server_addr;
 
-	/* Open necessary files */
+	/* Change current directory */
 
 	ret = chdir("/sys/kernel/debug/ovidiu");
 	if (ret == -1) {
@@ -30,13 +30,7 @@ int server_init(int *fd_arr)
 		exit(EXIT_FAILURE);
 	}
 	
-	fd_arr[stats_index] = open("stats", O_RDONLY);
-	if (fd_arr[stats_index] < 0) {
-		fprintf(stderr, "Error opening stats file: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
-
-	fd_arr[add_index] = open("add", O_WRONLY);
+/*	fd_arr[add_index] = open("add", O_WRONLY);
 	if (fd_arr[add_index] < 0) {
 		fprintf(stderr, "Error opening add file: %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
@@ -54,7 +48,8 @@ int server_init(int *fd_arr)
 		fprintf(stderr, "Error opening page file: %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
-
+*/
+	
 	/* Server info */
 	server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (server_fd == -1) {
@@ -80,16 +75,21 @@ int server_init(int *fd_arr)
 	return server_fd;
 }
 
-int stats_send(struct net_data *data, char *buf, int *fd_arr)
-{
-	printf("Entering function: %s.\n", __func__);
-	
+int stats_send(struct net_data *data, char *buf)
+{	
 	ssize_t ret;
 	size_t len;
 	int stats_fd;
 	char *buf_tmp;
-	
-	stats_fd = fd_arr[stats_index];
+
+	printf("Entering function: %s.\n", __func__);
+
+	stats_fd = open("stats", O_RDONLY);
+	if (stats_fd < 0) {
+		perror("Opening stats file");
+		exit(EXIT_FAILURE);
+	}
+
 	buf_tmp = buf;
 	len = page_size - 1;
 	
@@ -109,18 +109,15 @@ int stats_send(struct net_data *data, char *buf, int *fd_arr)
 	net_data_init(data, LIST_STATS_ID, buf, data->fd);
 	send_net_data(data);
 
+	close(stats_fd);
+	
 	printf("Exiting function: %s.\n", __func__);
 
 	return 0;
 }
 
-void server_clean(char *page_buf, int *fd_arr)
+void server_clean(char *page_buf)
 {
-	short i;
-	
-	for (i = 0; i < FD_ARR_COUNT; ++i)
-		close(fd_arr[i]);
-
 	free(page_buf);
 }
 
@@ -228,7 +225,6 @@ int get_sync_answer(struct net_data *data) {
 		} else {
 			/* Received message from server */
 			ret = get_net_data(data, data->fd);
-			printf("data->header: %u\n", data->header);
 			if (ret == -1) {
 				printf("Magic number mismatch.\n");
 				/* Magic number mismatch */

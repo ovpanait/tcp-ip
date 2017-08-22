@@ -4,8 +4,10 @@
 #include <sys/types.h>
 
 #define MAGIC_NR 0x123
+/* Retrieve magic number form header */
 #define GET_MAGIC(x) \
 	((x) & ((1 << 16) - 1))
+/* Retrieve command id from header */
 #define GET_CMD_ID(x) \
 	((x) >> 16)
 
@@ -38,8 +40,8 @@ struct net_data {
 extern int page_size;
 
 /* Prototypes */
-int server_init(int *fd_arr);
-void server_clean(char *page_buf, int *fd_arr);
+int server_init(void);
+void server_clean(char *page_buf);
 
 int net_data_init(struct net_data *data, short command_id, char *payload, int sock_fd);
 int send_net_data(struct net_data *data);
@@ -52,6 +54,8 @@ int pread_rq(struct net_data *data, int sock_fd);
 int padd_rq(struct net_data *data, char *msg, int sock_fd);
 int del_rq(struct net_data *data, char *msg, int sockf_fd);
 
-int stats_send(struct net_data *data, char *buf, int *fd_arr);
-	
+int stats_send(struct net_data *data, char *buf);
+
+int get_sync_answer(struct net_data *data);
+
 #endif
