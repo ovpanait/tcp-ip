@@ -29,27 +29,7 @@ int server_init(void)
 		perror("chdir");
 		exit(EXIT_FAILURE);
 	}
-	
-/*	fd_arr[add_index] = open("add", O_WRONLY);
-	if (fd_arr[add_index] < 0) {
-		fprintf(stderr, "Error opening add file: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
-	
-	
-	fd_arr[del_index] = open("del", O_WRONLY);
-	if (fd_arr[del_index] < 0) {
-		fprintf(stderr, "Error opening del file: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
-
-	fd_arr[page_index] = open("page", O_RDWR);
-	if (fd_arr[page_index] < 0) {
-		fprintf(stderr, "Error opening page file: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
-*/
-	
+		
 	/* Server info */
 	server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (server_fd == -1) {
@@ -246,7 +226,8 @@ int ping_rq(struct net_data *data, int sock_fd)
 }
 
 /* Handle received messages synchronously */
-int get_ans_sync(struct net_data *data) {
+int get_ans_sync(struct net_data *data)
+{
 	short timeout;
 	fd_set read_fds;
 	int ret;
