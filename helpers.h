@@ -21,13 +21,6 @@
 #define FD_ARR_COUNT 4
 #define QUEUE_SIZE 5
 #define TIMEOUT 5
-
-enum {
-	add_index,
-	del_index,
-	stats_index,
-	page_index
-};
 	
 struct net_data {
 	uint32_t header;

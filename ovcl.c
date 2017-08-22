@@ -63,7 +63,8 @@ int main(int argc, char **argv)
 	
 	/* Perform operations based on command line parameters */
 	
-	while ((opt = getopt_long_only(argc, argv, "", longopts, NULL)) != -1) {
+	while ((opt = getopt_long_only(argc, argv, "", longopts, NULL)) != -1 &&
+	       (opt != '?')) {
 		struct net_data data;
 		
 		sock_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -112,12 +113,6 @@ int main(int argc, char **argv)
 		case 't':
 			printf("Calling ping.\n");
 			ping_rq(&data, sock_fd);
-			break;
-		case ':':
-			printf("Option needs value.\n");
-			break;
-		case '?':
-			printf("unknown option %c\n", optopt);
 			break;
 		}
 

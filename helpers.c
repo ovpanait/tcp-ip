@@ -244,7 +244,6 @@ int get_sync_answer(struct net_data *data) {
 	printf("Timeout\n");
 	
 	return -1;
-	
 }
 
 /* Common */
@@ -368,7 +367,6 @@ int get_net_data(struct net_data *data, int sock_fd) {
 
 	/* Copy socket fd */
 	data->fd = sock_fd;
-	printf("data->fd: %d\n", data->fd);
 
 	/* Read payload, if any */
 	if (data->message_size == 0)
