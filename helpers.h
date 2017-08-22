@@ -48,6 +48,7 @@ int padd_rq(struct net_data *data, char *msg, int sock_fd);
 int del_rq(struct net_data *data, char *msg, int sockf_fd);
 
 int stats_send(struct net_data *data, char *buf);
+int ladd_send(struct net_data *data, char *buf);
 
 int get_sync_answer(struct net_data *data);
 

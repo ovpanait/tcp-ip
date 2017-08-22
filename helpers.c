@@ -116,6 +116,56 @@ int stats_send(struct net_data *data, char *buf)
 	return 0;
 }
 
+int ladd_send(struct net_data *data, char *buf)
+{
+	ssize_t ret;
+	size_t len;
+	int add_fd;
+	char *buf_tmp;
+
+	printf("Entering function: %s.\n", __func__);
+
+	add_fd = open("add", O_WRONLY);
+	if (add_fd < 0) {
+		perror("Opening add file");
+		exit(EXIT_FAILURE);
+	}
+	
+	buf_tmp = data->payload;
+	len = data->message_size;
+
+	/* Write payload to kernel list */
+	while (len != 0 && (ret = write(add_fd, buf_tmp, len)) != 0) {
+		if (ret == -1) {
+			if (errno == EINTR)
+				continue;
+			perror ("write");
+			break;
+		}
+
+		printf("Sent %d bytes through socket.\n", ret);
+
+		/* TODO deal with partial writes */
+		len -= ret;
+		buf_tmp += ret;
+	}
+
+	if (sprintf(buf, "Added item to list successfully.\n") < 0) {
+		perror("sprintf");
+		/* TODO deal with error */
+		exit(EXIT_FAILURE);
+	}
+	
+	net_data_init(data, LIST_ADD_ID, buf, data->fd);
+	send_net_data(data);
+
+	close(add_fd);
+	
+	printf("Exiting function: %s.\n", __func__);
+	
+	return 0;
+}
+
 void server_clean(char *page_buf)
 {
 	free(page_buf);
@@ -225,15 +275,21 @@ int get_sync_answer(struct net_data *data) {
 		} else {
 			/* Received message from server */
 			ret = get_net_data(data, data->fd);
-			if (ret == -1) {
-				printf("Magic number mismatch.\n");
-				/* Magic number mismatch */
-				/* TODO */
+			if (ret != 0) {
+				switch(ret) {
+				case -EIO:
+					fprintf(stderr, "Connection closed by the server\n");
+					break;
+				case -EINVAL:
+					fprintf(stderr, "Magic number mismatch\n");
+					break;
+				}
+				close(data->fd);
 				exit(EXIT_FAILURE);
 			}
 
 			/* The server will always send something back */
-			printf("%s\n", data->payload);
+			printf("Payload: %s\n", data->payload);
 
 			close(data->fd);
 			return 0;
@@ -321,11 +377,13 @@ int get_net_data(struct net_data *data, int sock_fd) {
 	size_t len;
 	uint32_t *header_buf, *msg_size_buf;
 	char *buf;
-	
+
+	printf("Entering function: %s\n", __func__);
+
+	/* Read header*/
 	len = sizeof(data->header);
 	header_buf = &data->header;
 	
-	/* Read header*/
 	while (len != 0 && (ret = read(sock_fd, header_buf, len)) != 0) {
 		if (ret == -1) {
 			if (errno == EINTR)
@@ -338,17 +396,21 @@ int get_net_data(struct net_data *data, int sock_fd) {
 		len -= ret;
 		header_buf += ret;
 	}
-
+	/* When read returns 0, it means that the socket was closed on the other
+	 * side.
+	 */
+	if (ret == 0)
+		return -EIO;
+	
 	/* Validate header */
 	data->header = ntohl(data->header);/* Convert from network to host endianness */
 	printf("Got header: %08x \n", data->header); /* DEBUG */
 	if (GET_MAGIC(data->header) != MAGIC_NR) {
-		/* TODO send_failure(sock_fd); */
-		return -1;
+		fprintf(stderr, "MAGIC NUMBER mismatch\n");
+		return -EINVAL;
 	}
 
 	/* Read message size */
-
 	len = sizeof(data->message_size);
 	msg_size_buf = &data->message_size;
 	
@@ -360,11 +422,14 @@ int get_net_data(struct net_data *data, int sock_fd) {
 			perror("read");
 			break;
 		}
-		
+
+		printf("Read %ld bytes form message_size\n", ret);
 		len -= ret;
 		msg_size_buf += ret;
 	}
-
+	if (ret == 0)
+		return -EIO;
+	
 	/* Copy socket fd */
 	data->fd = sock_fd;
 
@@ -393,6 +458,11 @@ int get_net_data(struct net_data *data, int sock_fd) {
 		buf += ret;
 	}
 	*buf = '\0';
+
+	if (ret == 0)
+		return -EIO;
 	
+	printf("Exiting function: %s\n", __func__);
+
 	return 0;
 }

@@ -86,9 +86,11 @@ int main(int argc, char **argv)
 			}
 			else {
 			       cmd_id =  GET_CMD_ID(data.header);
-
+			       printf("Command id: %u\n", cmd_id);
 			       switch (cmd_id) {
 			       case LIST_ADD_ID:
+				       printf("Starting ladd_send\n");
+				       ladd_send(&data, buf);
 				       break;
 			       case LIST_STATS_ID:
 				       stats_send(&data, buf);
