@@ -8,7 +8,6 @@
 #include <fcntl.h>
 #include <string.h>
 #include <arpa/inet.h>
-#include <limits.h>
 
 #include "helpers.h"
 
@@ -154,25 +153,8 @@ int ldel_send(struct net_data *data, char *buf)
 	int del_fd;
 	char *buf_tmp;
 
-	char *endptr;
-	long l;
-	
 	printf("Entering function: %s.\n", __func__);
-
-	printf("Data payload: %s\n", data->payload);
 	
-	/* Perform checks on seq value
-	 * Use strtol instead of atoi in order to avoid 
-	 * undefined behavior;
-	 */
-	l = strtol(data->payload, &endptr, 10);
-	if (l > INT_MAX || (errno == ERANGE && l == LONG_MAX) ||
-	    l < INT_MIN || (errno == ERANGE && l == LONG_MIN) ||
-	    *endptr != '\0') {
-		fprintf(stderr, "Failed to convert del argument.\n");
-		exit(EXIT_FAILURE);
-	}
-
 	/* Delete list entry */
 	del_fd = open("del", O_WRONLY);
 	if (del_fd < 0) {
@@ -187,22 +169,18 @@ int ldel_send(struct net_data *data, char *buf)
 		if (ret == -1) {
 			if (errno == EINTR)
 				continue;
-			perror ("write");
 			break;
 		}
-
-		printf("Sent %ld bytes through socket.\n", ret);
-
+		
 		/* TODO deal with partial writes */
 		len -= ret;
 		buf_tmp += ret;
 	}	
 	
-	if (sprintf(buf, "Deleted item successfully\n") < 0) {
-		perror("sprintf");
-		/* TODO deal with error */
-		exit(EXIT_FAILURE);
-	}
+	if (ret != -1)
+		sprintf(buf, "Deleted item successfully\n");
+	else
+		sprintf(buf, "Operation unsuccessful. Error: %s\n", strerror(errno));
 	
 	net_data_init(data, LIST_DEL_ID, buf, data->fd);
 	send_net_data(data);
