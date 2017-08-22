@@ -192,6 +192,53 @@ int ldel_send(struct net_data *data, char *buf)
 	return 0;
 }
 
+int padd_send(struct net_data *data, char *buf)
+{
+	ssize_t ret;
+	size_t len;
+	int page_fd;
+	char *buf_tmp;
+
+	printf("Entering function: %s.\n", __func__);
+	
+	/* Delete list entry */
+	page_fd = open("page", O_WRONLY);
+	if (page_fd < 0) {
+		perror("Opening del file");
+		exit(EXIT_FAILURE);
+	}
+	
+	buf_tmp = data->payload;
+	len = data->message_size;
+	
+	while (len != 0 && (ret = write(page_fd, buf_tmp, len)) != 0) {
+		if (ret == -1) {
+			if (errno == EINTR)
+				continue;
+			break;
+		}
+		
+		/* TODO deal with partial writes */
+		len -= ret;
+		buf_tmp += ret;
+	}	
+	
+	if (ret != -1)
+		sprintf(buf, "Content added successfully\n");
+	else
+		sprintf(buf, "Operation unsuccessful. Error: %s\n", strerror(errno));
+	
+	net_data_init(data, PADD_ID, buf, data->fd);
+	send_net_data(data);
+
+	close(page_fd);
+	
+	printf("Exiting function: %s.\n", __func__);
+
+	return 0;
+}
+
+
 void server_clean(char *page_buf)
 {
 	free(page_buf);
@@ -239,9 +286,14 @@ int padd_rq(struct net_data *data, char *msg, int sock_fd)
 {		
 	printf("Entering function: %s.\n", __func__);
 
-	net_data_init(data, PADD_ID, msg, sock_fd);
-	send_net_data(data);
-
+	if (strlen(msg)) { 
+		net_data_init(data, PADD_ID, msg, sock_fd);
+		send_net_data(data);
+	} else {
+		fprintf(stderr, "Could not send empty string\n");
+		exit(EXIT_FAILURE);
+	}
+		
 	printf("Exiting function: %s.\n", __func__);
 
 	return 0;

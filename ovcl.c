@@ -80,7 +80,6 @@ int main(int argc, char **argv)
 			break;
 		case 'd':
 			printf("Calling list_del.\n");
-			printf("Optarg : %s %lu\n", optarg, strlen(optarg));
 			del_rq(&data, optarg, sock_fd);
 			break;	
 		case 'p':

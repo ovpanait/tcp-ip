@@ -99,6 +99,7 @@ int main(int argc, char **argv)
 				       ldel_send(&data, buf);
 				       break;
 			       case PADD_ID:
+				       padd_send(&data, buf);
 				       break;
 			       case PREAD_ID:
 				       break;
