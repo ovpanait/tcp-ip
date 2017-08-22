@@ -116,7 +116,7 @@ int main(int argc, char **argv)
 			break;
 		}
 
-		 get_sync_answer(&data);
+		 get_ans_sync(&data);
 	}
 	
 	if (cli_flag) {

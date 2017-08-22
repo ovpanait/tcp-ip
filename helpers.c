@@ -246,7 +246,7 @@ int ping_rq(struct net_data *data, int sock_fd)
 }
 
 /* Handle received messages synchronously */
-int get_sync_answer(struct net_data *data) {
+int get_ans_sync(struct net_data *data) {
 	short timeout;
 	fd_set read_fds;
 	int ret;
