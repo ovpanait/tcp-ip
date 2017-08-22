@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <limits.h>
 
 #include "helpers.h"
 
@@ -123,7 +124,7 @@ int ladd_send(struct net_data *data, char *buf)
 			break;
 		}
 
-		printf("Sent %d bytes through socket.\n", ret);
+		printf("Sent %ld bytes through socket.\n", ret);
 
 		/* TODO deal with partial writes */
 		len -= ret;
@@ -143,6 +144,73 @@ int ladd_send(struct net_data *data, char *buf)
 	
 	printf("Exiting function: %s.\n", __func__);
 	
+	return 0;
+}
+
+int ldel_send(struct net_data *data, char *buf)
+{
+	ssize_t ret;
+	size_t len;
+	int del_fd;
+	char *buf_tmp;
+
+	char *endptr;
+	long l;
+	
+	printf("Entering function: %s.\n", __func__);
+
+	printf("Data payload: %s\n", data->payload);
+	
+	/* Perform checks on seq value
+	 * Use strtol instead of atoi in order to avoid 
+	 * undefined behavior;
+	 */
+	l = strtol(data->payload, &endptr, 10);
+	if (l > INT_MAX || (errno == ERANGE && l == LONG_MAX) ||
+	    l < INT_MIN || (errno == ERANGE && l == LONG_MIN) ||
+	    *endptr != '\0') {
+		fprintf(stderr, "Failed to convert del argument.\n");
+		exit(EXIT_FAILURE);
+	}
+
+	/* Delete list entry */
+	del_fd = open("del", O_WRONLY);
+	if (del_fd < 0) {
+		perror("Opening del file");
+		exit(EXIT_FAILURE);
+	}
+	
+	buf_tmp = data->payload;
+	len = data->message_size;
+
+	while (len != 0 && (ret = write(del_fd, buf_tmp, len)) != 0) {
+		if (ret == -1) {
+			if (errno == EINTR)
+				continue;
+			perror ("write");
+			break;
+		}
+
+		printf("Sent %ld bytes through socket.\n", ret);
+
+		/* TODO deal with partial writes */
+		len -= ret;
+		buf_tmp += ret;
+	}	
+	
+	if (sprintf(buf, "Deleted item successfully\n") < 0) {
+		perror("sprintf");
+		/* TODO deal with error */
+		exit(EXIT_FAILURE);
+	}
+	
+	net_data_init(data, LIST_DEL_ID, buf, data->fd);
+	send_net_data(data);
+
+	close(del_fd);
+	
+	printf("Exiting function: %s.\n", __func__);
+
 	return 0;
 }
 
@@ -341,7 +409,7 @@ int send_net_data(struct net_data *data)
 			break;
 		}
 
-		printf("Sent %d bytes through socket.\n", ret);
+		printf("Sent %ld bytes through socket.\n", ret);
 		
 		data_len -= ret;
 		buf += ret;

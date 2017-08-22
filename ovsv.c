@@ -96,6 +96,7 @@ int main(int argc, char **argv)
 				       stats_send(&data, buf);
 				       break;
 			       case LIST_DEL_ID:
+				       ldel_send(&data, buf);
 				       break;
 			       case PADD_ID:
 				       break;

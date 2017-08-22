@@ -7,7 +7,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <limits.h>
 #include <string.h>
 
 #define _GNU_SOURCE
@@ -23,10 +22,6 @@ static int cli_flag;
 
 int main(int argc, char **argv)
 {
-	/* Auxiliary */
-	long int l;
-	char *endptr;
-
 	/* File descriptors */
 	int len;
 	int sock_fd;
@@ -85,17 +80,7 @@ int main(int argc, char **argv)
 			break;
 		case 'd':
 			printf("Calling list_del.\n");
-			/* Use strtol instead of atoi in order to avoid 
-			 * undefined behavior;
-			 */
-			l = strtol(optarg, &endptr, 10);
-			if (l > INT_MAX || (errno == ERANGE && l == LONG_MAX) ||
-			    l < INT_MAX || (errno == ERANGE && l == LONG_MIN) ||
-			    *endptr != '\0') {
-				fprintf(stderr, "Failed to convert del argument.\n");
-				exit(EXIT_FAILURE);
-			}
-			seq = l;
+			printf("Optarg : %s %lu\n", optarg, strlen(optarg));
 			del_rq(&data, optarg, sock_fd);
 			break;	
 		case 'p':
