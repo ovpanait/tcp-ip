@@ -279,8 +279,6 @@ int get_ans_sync(struct net_data *data)
 	int ret;
 	struct timeval tv;
 
-	printf("data->fd: %d\n", data->fd);
-	
 	timeout = TIMEOUT;
 	
 	FD_ZERO(&read_fds);
