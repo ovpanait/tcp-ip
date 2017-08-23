@@ -414,22 +414,22 @@ int send_net_data(struct net_data *data)
 		exit(EXIT_FAILURE);
 	}
 	buf_tmp = buf; /* Save this address for later use.
-			* Perform pointer arithmetic on buf. 
+			* Perform pointer arithmetic on buf_tmp. 
 			*/
 
 	/* Serialization */
-	memcpy(buf, &data->header, sizeof(data->header));
-	buf += sizeof(data->header);
+	memcpy(buf_tmp, &data->header, sizeof(data->header));
+	buf_tmp += sizeof(data->header);
 	
-	memcpy(buf, &data->message_size, sizeof(data->message_size));
-	buf += sizeof(data->message_size);
+	memcpy(buf_tmp, &data->message_size, sizeof(data->message_size));
+	buf_tmp += sizeof(data->message_size);
 	
 	if (data->message_size > 0)
-		memcpy(buf, data->payload, data->message_size);
+		memcpy(buf_tmp, data->payload, data->message_size);
 
 	/* Send serialized data through socket */
-	buf = buf_tmp; /* Reset to old value */
-	while (data_len != 0 && (ret = write(data->fd, buf, data_len)) != 0) {
+	buf_tmp = buf; /* Reset to old value */
+	while (data_len != 0 && (ret = write(data->fd, buf_tmp, data_len)) != 0) {
 		if (ret == -1) {
 			if (errno == EINTR)
 				continue;
@@ -440,11 +440,11 @@ int send_net_data(struct net_data *data)
 		printf("Sent %ld bytes through socket.\n", ret);
 		
 		data_len -= ret;
-		buf += ret;
+		buf_tmp += ret;
 	}
 
 	/* Cleanup */
-	free(buf_tmp);
+	free(buf);
 	
 	return 0;
 }
