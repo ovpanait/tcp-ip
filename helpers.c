@@ -238,6 +238,46 @@ int padd_send(struct net_data *data, char *buf)
 	return 0;
 }
 
+int pread_send(struct net_data *data, char *buf)
+{
+	ssize_t ret;
+	size_t len;
+	int page_fd;
+	char *buf_tmp;
+
+	printf("Entering function: %s.\n", __func__);
+
+	page_fd = open("page", O_RDONLY);
+	if (page_fd < 0) {
+		perror("Opening page file");
+		exit(EXIT_FAILURE);
+	}
+
+	buf_tmp = buf;
+	len = page_size - 1;
+	
+	while (len != 0 && (ret = read(page_fd, buf_tmp, len)) != 0) {
+		if (ret == -1) {
+			if (errno == EINTR)
+				continue;
+			perror("read");
+			break;
+		}
+
+		len -= ret;
+		buf_tmp += ret;
+	}
+	*buf_tmp = '\0';
+
+	net_data_init(data, PREAD_ID, buf, data->fd);
+	send_net_data(data);
+
+	close(page_fd);
+	
+	printf("Exiting function: %s.\n", __func__);
+
+	return 0;
+}
 
 void server_clean(char *page_buf)
 {

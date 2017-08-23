@@ -102,6 +102,7 @@ int main(int argc, char **argv)
 				       padd_send(&data, buf);
 				       break;
 			       case PREAD_ID:
+				       pread_send(&data, buf);
 				       break;
 			       case PING_ID:
 				       break;

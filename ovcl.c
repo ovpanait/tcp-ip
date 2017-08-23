@@ -14,10 +14,7 @@
 
 #include "helpers.h"
 
-#define MAX_FD 1024
-
 static char *buf;
-static int seq;
 static int cli_flag;
 
 int main(int argc, char **argv)
@@ -100,7 +97,10 @@ int main(int argc, char **argv)
 			break;
 		}
 
-		 get_ans_sync(&data);
+		/* The server must send something back, until a timeout 
+		 * occurs.
+		 */
+		get_ans_sync(&data);
 	}
 	
 	if (cli_flag) {
