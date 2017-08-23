@@ -1,25 +1,32 @@
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <sys/socket.h>
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <signal.h>
+#include <errno.h>
 
 #define _GNU_SOURCE
 #include <getopt.h>
 
 #include "helpers.h"
 
-static char debug_mode = 0;
+static char debug_mode;
 
 int main(int argc, char **argv)
 {
-	int ret;
+	/* Auxiliary */
 	pid_t pid;
 	char *buf;
-		
+	
+	pid_t ret;
+	int status;
+	fd_set inputs, testfds;
+	struct timeval timeout;
+	
 	/* Server-Client */
 
 	int server_fd;
@@ -52,20 +59,70 @@ int main(int argc, char **argv)
 
 	/* Server initialization */
 	server_fd = server_init();
-
+	FD_ZERO(&inputs);
+	FD_SET(server_fd, &inputs);
+	
 	/* Activate debug mode, if necessary */
 	if (debug_mode)
 		printf("Debug mode activated.\n");
-
-	/* Ignore child exit details */
-	signal(SIGCHLD, SIG_IGN);
 	
 	while(1) {
 		struct net_data data;
 		int cmd_id;
-		
+
 		printf("Server waiting.\n");
 
+		/* Check the exit status of the children, without blocking.
+		 * Children will exiit with ENOENT when the kernel debugfs
+		 * files don't exist, and with EIO when an i/o operation
+		 * fails.
+		 */
+		errno = 0;
+		ret = waitpid(-1, &status, WNOHANG);
+		if (ret != 0 && errno != ECHILD) {
+			if (ret == -1) {
+				/* Error */
+				perror("waitpid");
+				exit(EXIT_FAILURE);
+			}
+	
+			if (WIFEXITED(status)) {
+				/* A child finished normally */
+				switch(WEXITSTATUS(status)){
+				case ENOENT:
+					/* Kernel module unloaded unexpectedly */
+					fprintf(stderr, "Kernel files missing\n");
+					exit(EXIT_FAILURE);
+					break;
+				case EIO:
+					/* Read/Write error occurred */
+					fprintf(stderr, "IO error\n");
+					exit(EXIT_FAILURE);
+					break;
+				}
+			}
+			else {
+				/* Child killed by signal. Shouldn't have happened */
+				fprintf(stderr, "Child process killed by signal %d\n",
+					WTERMSIG(status));
+				exit(EXIT_FAILURE);
+			}
+		}
+
+		timeout.tv_sec = 2;
+		timeout.tv_usec = 0;
+		testfds = inputs;
+		switch (select(server_fd + 1, &testfds, NULL, NULL, &timeout)) {
+		case 0:
+			/* No activity. Go back and check for errors */
+			continue;
+		case -1:
+			perror("select");
+			exit(EXIT_FAILURE);
+			break;
+		}
+
+		/* No errors so far, we can accept the client and fork */
 		client_len = sizeof(client_addr);
 		client_fd = accept(server_fd, (struct sockaddr *)&client_addr,
 				   &client_len);
@@ -77,33 +134,32 @@ int main(int argc, char **argv)
 		}
 		
 		if (pid == 0) {
-			/* Child - handle client request */
+			/* Child will handle client request */
 			if (get_net_data(&data, client_fd) != 0) {
 				fprintf(stderr, "Error occurred on get_net_data.\n");
+				/* TODO */
 			}
-			else {
-			       cmd_id =  GET_CMD_ID(data.header);
-			       switch (cmd_id) {
-			       case LIST_ADD_ID:
-				       ladd_send(&data, buf);
-				       break;
-			       case LIST_STATS_ID:
-				       stats_send(&data, buf);
-				       break;
-			       case LIST_DEL_ID:
-				       ldel_send(&data, buf);
-				       break;
-			       case PADD_ID:
-				       padd_send(&data, buf);
-				       break;
-			       case PREAD_ID:
-				       pread_send(&data, buf);
-				       break;
-			       case PING_ID:
-				       ping_send(&data, buf);
-				       break;
-			       }
-			}
+			else
+				switch (GET_CMD_ID(data.header)) {
+				case LIST_ADD_ID:
+					ladd_send(&data, buf);
+					break;
+				case LIST_STATS_ID:
+					stats_send(&data, buf);
+					break;
+				case LIST_DEL_ID:
+					ldel_send(&data, buf);
+					break;
+				case PADD_ID:
+					padd_send(&data, buf);
+					break;
+				case PREAD_ID:
+					pread_send(&data, buf);
+					break;
+				case PING_ID:
+					ping_send(&data, buf);
+					break;
+				}
 			
 			close(client_fd);
 			exit(EXIT_SUCCESS);

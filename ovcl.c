@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 	struct sockaddr_in address;
 	int result;
 	fd_set readfds;
-	
+
 	/* Command line parameter parsing */
 	int opt;
 	struct option longopts[] = {

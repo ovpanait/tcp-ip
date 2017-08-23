@@ -67,7 +67,7 @@ int stats_send(struct net_data *data, char *buf)
 	stats_fd = open("stats", O_RDONLY);
 	if (stats_fd < 0) {
 		perror("Opening stats file");
-		exit(EXIT_FAILURE);
+		exit(ENOENT);
 	}
 
 	buf_tmp = buf;
@@ -78,7 +78,7 @@ int stats_send(struct net_data *data, char *buf)
 			if (errno == EINTR)
 				continue;
 			perror("read");
-			break;
+			exit(EIO);
 		}
 
 		len -= ret;
@@ -108,7 +108,7 @@ int ladd_send(struct net_data *data, char *buf)
 	add_fd = open("add", O_WRONLY);
 	if (add_fd < 0) {
 		perror("Opening add file");
-		exit(EXIT_FAILURE);
+		exit(ENOENT);
 	}
 	
 	buf_tmp = data->payload;
@@ -120,7 +120,7 @@ int ladd_send(struct net_data *data, char *buf)
 			if (errno == EINTR)
 				continue;
 			perror ("write");
-			break;
+			exit(EIO);
 		}
 
 		/* TODO deal with partial writes */
@@ -153,7 +153,7 @@ int ldel_send(struct net_data *data, char *buf)
 	del_fd = open("del", O_WRONLY);
 	if (del_fd < 0) {
 		perror("Opening del file");
-		exit(EXIT_FAILURE);
+		exit(ENOENT);
 	}
 	
 	buf_tmp = data->payload;
@@ -163,7 +163,8 @@ int ldel_send(struct net_data *data, char *buf)
 		if (ret == -1) {
 			if (errno == EINTR)
 				continue;
-			break;
+			perror("Write");
+			exit(EIO);
 		}
 		
 		/* TODO deal with partial writes */
@@ -199,7 +200,7 @@ int padd_send(struct net_data *data, char *buf)
 	page_fd = open("page", O_WRONLY);
 	if (page_fd < 0) {
 		perror("Opening del file");
-		exit(EXIT_FAILURE);
+		exit(ENOENT);
 	}
 	
 	buf_tmp = data->payload;
@@ -209,7 +210,7 @@ int padd_send(struct net_data *data, char *buf)
 		if (ret == -1) {
 			if (errno == EINTR)
 				continue;
-			break;
+			exit(EIO);
 		}
 		
 		/* TODO deal with partial writes */
@@ -244,7 +245,7 @@ int pread_send(struct net_data *data, char *buf)
 	page_fd = open("page", O_RDONLY);
 	if (page_fd < 0) {
 		perror("Opening page file");
-		exit(EXIT_FAILURE);
+		exit(ENOENT);
 	}
 
 	buf_tmp = buf;
@@ -255,7 +256,7 @@ int pread_send(struct net_data *data, char *buf)
 			if (errno == EINTR)
 				continue;
 			perror("read");
-			break;
+			exit(EIO);
 		}
 
 		len -= ret;
