@@ -230,19 +230,19 @@ static ssize_t page_write(struct file *file, const char __user *buf,
 {
 	ssize_t ret;
 
-	pr_debug("Performing write operation.\n");
-
 	mutex_lock(&io_mutex);
-	pr_debug("page_buf: %p, PAGE_SIZE:%lu, *ppos: %llu, buf: %p, len: %lu\n",
-		 page_buf, PAGE_SIZE, *ppos, buf, len);
+
+	pr_debug("Entering function %s\n", __func__);
 
 	ret = simple_write_to_buffer(page_buf, PAGE_SIZE, ppos, buf, len);
-	if (ret != len)
+	if (ret != len) {
 		ret = -EINVAL;
+		pr_debug("Failed to write to buffer\n");
+	}
 
 	size = *ppos;
 
-	pr_debug("Value of ret:%ld\n", ret);
+	pr_debug("Exiting function %s\n", __func__);
 
 	mutex_unlock(&io_mutex);
 
@@ -254,10 +254,12 @@ static ssize_t page_read(struct file *file, char __user *buf,
 {
 	ssize_t ret;
 
-	pr_debug("Performing read operation.\n");
-
 	mutex_lock(&io_mutex);
+	pr_debug("Entering function %s\n", __func__);
+
 	ret = simple_read_from_buffer(buf, len, ppos, page_buf, size);
+
+	pr_debug("Exiting function %s\n", __func__);
 	mutex_unlock(&io_mutex);
 
 	return ret;
