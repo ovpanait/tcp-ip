@@ -123,18 +123,12 @@ int ladd_send(struct net_data *data, char *buf)
 			break;
 		}
 
-		printf("Sent %ld bytes through socket.\n", ret);
-
 		/* TODO deal with partial writes */
 		len -= ret;
 		buf_tmp += ret;
 	}
 
-	if (sprintf(buf, "Added item to list successfully.\n") < 0) {
-		perror("sprintf");
-		/* TODO deal with error */
-		exit(EXIT_FAILURE);
-	}
+	sprintf(buf, "Added item to list successfully.\n");
 	
 	net_data_init(data, LIST_ADD_ID, buf, data->fd);
 	send_net_data(data);
@@ -177,10 +171,10 @@ int ldel_send(struct net_data *data, char *buf)
 		buf_tmp += ret;
 	}	
 	
-	if (ret != -1)
-		sprintf(buf, "Deleted item successfully\n");
-	else
+	if (ret == -1)
 		sprintf(buf, "Operation unsuccessful. Error: %s\n", strerror(errno));
+	else
+		sprintf(buf, "Deleted item successfully\n");
 	
 	net_data_init(data, LIST_DEL_ID, buf, data->fd);
 	send_net_data(data);
@@ -281,11 +275,9 @@ int pread_send(struct net_data *data, char *buf)
 
 int ping_send(struct net_data *data, char *buf)
 {
-	size_t len;
-	
 	printf("Entering function %s\n", __func__);
 
-	len = sprintf(buf, "Server is alive\n");
+	sprintf(buf, "Server is alive\n");
 
 	net_data_init(data, PING_ID, buf, data->fd);
 	send_net_data(data);

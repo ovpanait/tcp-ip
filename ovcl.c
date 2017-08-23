@@ -68,31 +68,24 @@ int main(int argc, char **argv)
 
 		switch (opt) {
 		case 's':
-			printf("Calling list_get_stats.\n");
 			stats_rq(&data, sock_fd);
 			break;
 		case 'a':
-			printf("Calling list_add.\n");
 			add_rq(&data, optarg, sock_fd);
 			break;
 		case 'd':
-			printf("Calling list_del.\n");
 			del_rq(&data, optarg, sock_fd);
 			break;	
 		case 'p':
-			printf("Calling padd.\n");
 			padd_rq(&data, optarg, sock_fd);
 			break;
 		case 'r':
-			printf("Calling read.\n");
 			pread_rq(&data, sock_fd);
 			break;
 		case 'c':
-			printf("Calling cli.\n");
 			cli_flag = 1;
 			break;
 		case 't':
-			printf("Calling ping.\n");
 			ping_rq(&data, sock_fd);
 			break;
 		}

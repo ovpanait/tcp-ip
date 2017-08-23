@@ -78,18 +78,13 @@ int main(int argc, char **argv)
 		
 		if (pid == 0) {
 			/* Child - handle client request */
-
-			printf("Entered child process.\n");
-			
 			if (get_net_data(&data, client_fd) != 0) {
 				fprintf(stderr, "Error occurred on get_net_data.\n");
 			}
 			else {
 			       cmd_id =  GET_CMD_ID(data.header);
-			       printf("Command id: %u\n", cmd_id);
 			       switch (cmd_id) {
 			       case LIST_ADD_ID:
-				       printf("Starting ladd_send\n");
 				       ladd_send(&data, buf);
 				       break;
 			       case LIST_STATS_ID:
@@ -113,7 +108,7 @@ int main(int argc, char **argv)
 			close(client_fd);
 			exit(EXIT_SUCCESS);
 		}
-		printf("Parent process: closing fd.\n");
+
 		close(client_fd);
 	}
 	
