@@ -105,6 +105,7 @@ int main(int argc, char **argv)
 				       pread_send(&data, buf);
 				       break;
 			       case PING_ID:
+				       ping_send(&data, buf);
 				       break;
 			       }
 			}

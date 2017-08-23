@@ -52,6 +52,7 @@ int ladd_send(struct net_data *data, char *buf);
 int ldel_send(struct net_data *data, char *buf);
 int padd_send(struct net_data *data, char *buf);
 int pread_send(struct net_data *data, char *buf);
+int ping_send(struct net_data *data, char *buf);
 
 int get_ans_sync(struct net_data *data);
 

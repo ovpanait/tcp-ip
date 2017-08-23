@@ -279,6 +279,22 @@ int pread_send(struct net_data *data, char *buf)
 	return 0;
 }
 
+int ping_send(struct net_data *data, char *buf)
+{
+	size_t len;
+	
+	printf("Entering function %s\n", __func__);
+
+	len = sprintf(buf, "Server is alive\n");
+
+	net_data_init(data, PING_ID, buf, data->fd);
+	send_net_data(data);
+
+	printf("Exiting function %s\n", __func__);
+	
+	return 0;
+}
+
 void server_clean(char *page_buf)
 {
 	free(page_buf);
@@ -395,7 +411,7 @@ int get_ans_sync(struct net_data *data)
 			if (ret != 0) {
 				switch(ret) {
 				case -EIO:
-					fprintf(stderr, "Connection closed by the server\n");
+					fprintf(stderr, "Server not reachable\n");
 					break;
 				case -EINVAL:
 					fprintf(stderr, "Magic number mismatch\n");
