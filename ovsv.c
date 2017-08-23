@@ -15,20 +15,22 @@
 #include "helpers.h"
 
 static char debug_mode;
+static char *buf;
+
+void termination_handler(int signum)
+{
+	server_clean(buf);
+}
 
 int main(int argc, char **argv)
 {
 	/* Auxiliary */
 	pid_t pid;
-	char *buf;
-	
-	pid_t ret;
-	int status;
-	fd_set inputs, testfds;
-	struct timeval timeout;
+
+	struct sigaction sig;
+	sigset_t mask;
 	
 	/* Server-Client */
-
 	int server_fd;
 	int client_fd;
 	int client_len;
@@ -48,6 +50,10 @@ int main(int argc, char **argv)
 			break;
 		}
 
+	/* Activate debug mode, if necessary */
+	if (debug_mode)
+		printf("Debug mode activated.\n");
+	
 	/* Allocate buffer of size PAGE_SIZE */
 	page_size = getpagesize();
 	buf = malloc(page_size);
@@ -57,72 +63,27 @@ int main(int argc, char **argv)
 	}
 	buf[page_size - 1] = '\0';
 
-	/* Server initialization */
+	/* Shut down the server when a major error occurs.
+	 * Child processes which encounter errors such as "missing kernel file"
+	 * or i/o errors will send SIGTERM to the server.
+	 */
+	signal(SIGCHLD, SIG_IGN); /* Ignore child exit details */
+	sig.sa_handler = &termination_handler; /* Cleanup handler */
+	sigfillset(&mask); /* Block any other signals from occuring during cleanup.
+			    * The signal currently being handled is also blocked.
+			    */
+	sig.sa_mask = mask;
+	sigaction(SIGTERM, &sig, NULL);
+
+	/* Server init */
 	server_fd = server_init();
-	FD_ZERO(&inputs);
-	FD_SET(server_fd, &inputs);
-	
-	/* Activate debug mode, if necessary */
-	if (debug_mode)
-		printf("Debug mode activated.\n");
 	
 	while(1) {
 		struct net_data data;
 		int cmd_id;
 
 		printf("Server waiting.\n");
-
-		/* Check the exit status of the children, without blocking.
-		 * Children will exiit with ENOENT when the kernel debugfs
-		 * files don't exist, and with EIO when an i/o operation
-		 * fails.
-		 */
-		errno = 0;
-		ret = waitpid(-1, &status, WNOHANG);
-		if (ret != 0 && errno != ECHILD) {
-			if (ret == -1) {
-				/* Error */
-				perror("waitpid");
-				exit(EXIT_FAILURE);
-			}
 	
-			if (WIFEXITED(status)) {
-				/* A child finished normally */
-				switch(WEXITSTATUS(status)){
-				case ENOENT:
-					/* Kernel module unloaded unexpectedly */
-					fprintf(stderr, "Kernel files missing\n");
-					exit(EXIT_FAILURE);
-					break;
-				case EIO:
-					/* Read/Write error occurred */
-					fprintf(stderr, "IO error\n");
-					exit(EXIT_FAILURE);
-					break;
-				}
-			}
-			else {
-				/* Child killed by signal. Shouldn't have happened */
-				fprintf(stderr, "Child process killed by signal %d\n",
-					WTERMSIG(status));
-				exit(EXIT_FAILURE);
-			}
-		}
-
-		timeout.tv_sec = 2;
-		timeout.tv_usec = 0;
-		testfds = inputs;
-		switch (select(server_fd + 1, &testfds, NULL, NULL, &timeout)) {
-		case 0:
-			/* No activity. Go back and check for errors */
-			continue;
-		case -1:
-			perror("select");
-			exit(EXIT_FAILURE);
-			break;
-		}
-
-		/* No errors so far, we can accept the client and fork */
 		client_len = sizeof(client_addr);
 		client_fd = accept(server_fd, (struct sockaddr *)&client_addr,
 				   &client_len);

@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
@@ -67,6 +68,7 @@ int stats_send(struct net_data *data, char *buf)
 	stats_fd = open("stats", O_RDONLY);
 	if (stats_fd < 0) {
 		perror("Opening stats file");
+		kill(getppid(), SIGTERM);
 		exit(ENOENT);
 	}
 
@@ -108,6 +110,7 @@ int ladd_send(struct net_data *data, char *buf)
 	add_fd = open("add", O_WRONLY);
 	if (add_fd < 0) {
 		perror("Opening add file");
+		kill(getppid(), SIGTERM);
 		exit(ENOENT);
 	}
 	
@@ -153,6 +156,7 @@ int ldel_send(struct net_data *data, char *buf)
 	del_fd = open("del", O_WRONLY);
 	if (del_fd < 0) {
 		perror("Opening del file");
+		kill(getppid(), SIGTERM);
 		exit(ENOENT);
 	}
 	
@@ -200,6 +204,7 @@ int padd_send(struct net_data *data, char *buf)
 	page_fd = open("page", O_WRONLY);
 	if (page_fd < 0) {
 		perror("Opening del file");
+		kill(getppid(), SIGTERM);
 		exit(ENOENT);
 	}
 	
@@ -245,6 +250,7 @@ int pread_send(struct net_data *data, char *buf)
 	page_fd = open("page", O_RDONLY);
 	if (page_fd < 0) {
 		perror("Opening page file");
+		kill(getppid(), SIGTERM);
 		exit(ENOENT);
 	}
 
@@ -290,7 +296,15 @@ int ping_send(struct net_data *data, char *buf)
 
 void server_clean(char *page_buf)
 {
+	pid_t pid;
+
+	fprintf(stderr, "Waiting for all children to exit\n");
+	while ((pid = wait(NULL)) > 0);
+	
 	free(page_buf);
+	
+	fprintf(stderr, "Shutting server down\n");
+	exit(EXIT_FAILURE);
 }
 
 /* Client side */
