@@ -83,7 +83,7 @@ int main(int argc, char **argv)
 			break;
 		case 'c':
 			cli_flag = 1;
-			break;
+			continue;
 		case 't':
 			ping_cl(&data, sock_fd);
 			break;
@@ -94,10 +94,14 @@ int main(int argc, char **argv)
 		 */
 		get_ans_sync(&data);
 	}
+
+	/* Start command line mode, if the case */
+	char cmd[MAX_LINE], arg[MAX_LINE];
 	
-	if (cli_flag) {
-		/* Start command line */
-		/*  We can now read/write via sock_fd.  */
+	while (cli_flag) {
+		if (parse_line(cmd, arg) == 0) {
+			printf("Result:%s %s\n", cmd, arg);
+		}
 	}
 	
 	return 0;

@@ -25,6 +25,8 @@
 #define SRV_ADDR "127.0.0.1"
 #define PORT 9734
 
+#define MAX_LINE 8096
+
 struct net_data {
 	uint32_t header;
 	uint32_t message_size;
@@ -58,5 +60,7 @@ int pread_sv(struct net_data *data, char *buf);
 int ping_sv(struct net_data *data, char *buf);
 
 int get_ans_sync(struct net_data *data);
+
+int parse_line(char *cmd, char *arg);
 
 #endif

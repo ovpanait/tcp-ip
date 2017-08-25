@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <ctype.h>
 #include <stdint.h>
 #include <unistd.h>
 #include <errno.h>
@@ -478,6 +479,79 @@ int get_ans_sync(struct net_data *data)
 	printf("Timeout\n");
 	
 	return -1;
+}
+
+/* The buffers are supposed to be at least of size MAX_LEN */
+int parse_line(char *cmd, char *arg)
+{
+	int c;
+	short quote;
+
+	char line[MAX_LINE];
+	char *p;
+
+	p = fgets(line, MAX_LINE, stdin);
+	if (p == NULL) {
+		if (ferror(stdin)) {
+			perror("fgets");
+			exit(EXIT_FAILURE);
+		}
+	
+		if(feof(stdin))
+			return -EINVAL;
+	}
+
+	printf("s=%s\n", p);
+	quote = 0;
+
+	printf("DEBUG1\n");
+	
+	/* Skip whitespaces */
+	while (*p && *p != '\n' && isspace(*p)) {
+		printf("inifnite");
+		++p;
+	}
+	
+	if (*p == '\0' || isspace(*p))
+		return -EINVAL;
+
+	printf("DEBUG2\n");
+	/* Fill cmd buffer */
+	while (*p && !isspace(*p))
+		*cmd++ = *p++;
+	*cmd = '\0';
+
+	printf("DEBUG3\n");
+	/* Skip whitespaces */
+	while (*p && *p != '\n' && isspace(*p)) {
+		printf("infinite\n");
+		++p;
+	}
+	if (*p == '\0' || isspace(*p))
+		return 0;
+
+	printf("DEBUG4\n");
+	/* Fill arg buffer - Take double quotes into consideration - */
+	while (*p && *p != '\n' && (quote || !isspace(*p))) {
+		printf("loop\n");
+		switch (*p) {
+		case '\"':
+			quote = !quote;
+			break;
+		default:
+			*arg++ = *p;
+			break;
+		}
+		++p;
+	}
+	*arg = '\0';
+
+	printf("DEBUG5\n");
+	/* Check for unbalanced double quotes */
+	if (quote)
+		return -EINVAL;
+       
+	return 0;
 }
 
 /* Common */
