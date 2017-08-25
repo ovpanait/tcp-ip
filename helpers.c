@@ -40,7 +40,7 @@ int server_init(void)
 
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	server_addr.sin_port = htons(9734);
+	server_addr.sin_port = htons(PORT);
 	server_len = sizeof(server_addr);
 
 	if (bind(server_fd, (struct sockaddr *)&server_addr, server_len) != 0) {
@@ -500,8 +500,6 @@ int send_net_data(struct net_data *data)
 			break;
 		}
 
-		printf("Sent %ld bytes through socket.\n", ret);
-		
 		data_len -= ret;
 		buf_tmp += ret;
 	}
@@ -532,7 +530,6 @@ int get_net_data(struct net_data *data, int sock_fd) {
 			break;
 		}
 
-		printf("Read %ld bytes of the header.\n", ret);
 		len -= ret;
 		header_buf += ret;
 	}

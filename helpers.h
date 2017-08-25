@@ -21,7 +21,10 @@
 #define FD_ARR_COUNT 4
 #define QUEUE_SIZE 5
 #define TIMEOUT 5
-	
+
+#define SRV_ADDR "127.0.0.1"
+#define PORT 9734
+
 struct net_data {
 	uint32_t header;
 	uint32_t message_size;
