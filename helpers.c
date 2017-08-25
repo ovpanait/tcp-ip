@@ -56,7 +56,7 @@ int server_init(void)
 	return server_fd;
 }
 
-int stats_send(struct net_data *data, char *buf)
+int stats_sv(struct net_data *data, char *buf)
 {	
 	ssize_t ret;
 	size_t len;
@@ -77,10 +77,17 @@ int stats_send(struct net_data *data, char *buf)
 	
 	while (len != 0 && (ret = read(stats_fd, buf_tmp, len)) != 0) {
 		if (ret == -1) {
-			if (errno == EINTR)
+			switch(errno) {
+			case EINTR:
 				continue;
-			perror("read");
-			exit(EIO);
+			case EINVAL:
+				sprintf(buf, "Could not read stats\n");
+				goto send;
+			default:
+				/* Something serious */
+				perror("Read");
+				exit(EIO);
+			}
 		}
 
 		len -= ret;
@@ -88,6 +95,7 @@ int stats_send(struct net_data *data, char *buf)
 	}
 	*buf_tmp = '\0';
 
+send:
 	net_data_init(data, LIST_STATS_ID, buf, data->fd);
 	send_net_data(data);
 
@@ -98,7 +106,7 @@ int stats_send(struct net_data *data, char *buf)
 	return 0;
 }
 
-int ladd_send(struct net_data *data, char *buf)
+int ladd_sv(struct net_data *data, char *buf)
 {
 	ssize_t ret;
 	size_t len;
@@ -115,15 +123,25 @@ int ladd_send(struct net_data *data, char *buf)
 	}
 	
 	buf_tmp = data->payload;
-	len = data->message_size;
-
+	if ((len = data->message_size) == 0) {
+		sprintf(buf, "Can't add empty string\n");
+		goto send;
+	}
+	
 	/* Write payload to kernel list */
 	while (len != 0 && (ret = write(add_fd, buf_tmp, len)) != 0) {
 		if (ret == -1) {
-			if (errno == EINTR)
+			switch(errno) {
+			case EINTR:
 				continue;
-			perror ("write");
-			exit(EIO);
+			case EINVAL:
+				sprintf(buf, "Could not add element to the list\n");
+				goto send;
+			default:
+				/* Something serious */
+				perror("Write");
+				exit(EIO);
+			}
 		}
 
 		/* TODO deal with partial writes */
@@ -131,8 +149,9 @@ int ladd_send(struct net_data *data, char *buf)
 		buf_tmp += ret;
 	}
 
-	sprintf(buf, "Added item to list successfully.\n");
-	
+	sprintf(buf, "Added item to list successfully\n");
+
+send:
 	net_data_init(data, LIST_ADD_ID, buf, data->fd);
 	send_net_data(data);
 
@@ -143,7 +162,7 @@ int ladd_send(struct net_data *data, char *buf)
 	return 0;
 }
 
-int ldel_send(struct net_data *data, char *buf)
+int ldel_sv(struct net_data *data, char *buf)
 {
 	ssize_t ret;
 	size_t len;
@@ -156,7 +175,9 @@ int ldel_send(struct net_data *data, char *buf)
 	del_fd = open("del", O_WRONLY);
 	if (del_fd < 0) {
 		perror("Opening del file");
-		kill(getppid(), SIGTERM);
+		kill(getppid(), SIGTERM); /* Serious error.
+					   * Kernel module not loaded 
+					   */
 		exit(ENOENT);
 	}
 	
@@ -165,22 +186,28 @@ int ldel_send(struct net_data *data, char *buf)
 
 	while (len != 0 && (ret = write(del_fd, buf_tmp, len)) != 0) {
 		if (ret == -1) {
-			if (errno == EINTR)
+			switch(errno) {
+			case EINTR:
 				continue;
-			perror("Write");
-			exit(EIO);
+			case EINVAL:
+				sprintf(buf, "Element with seq %s not found in the list\n",
+					data->payload);
+				goto send;
+			default:
+				/* Something serious */
+				perror("Write");
+				exit(EIO);
+			}
 		}
-		
 		/* TODO deal with partial writes */
 		len -= ret;
 		buf_tmp += ret;
-	}	
+	}
+		
 	
-	if (ret == -1)
-		sprintf(buf, "Operation unsuccessful. Error: %s\n", strerror(errno));
-	else
-		sprintf(buf, "Deleted item successfully\n");
-	
+	sprintf(buf, "Deleted element form list\n");
+
+send:
 	net_data_init(data, LIST_DEL_ID, buf, data->fd);
 	send_net_data(data);
 
@@ -191,7 +218,7 @@ int ldel_send(struct net_data *data, char *buf)
 	return 0;
 }
 
-int padd_send(struct net_data *data, char *buf)
+int padd_sv(struct net_data *data, char *buf)
 {
 	ssize_t ret;
 	size_t len;
@@ -200,7 +227,6 @@ int padd_send(struct net_data *data, char *buf)
 
 	printf("Entering function: %s.\n", __func__);
 	
-	/* Delete list entry */
 	page_fd = open("page", O_WRONLY);
 	if (page_fd < 0) {
 		perror("Opening del file");
@@ -209,13 +235,24 @@ int padd_send(struct net_data *data, char *buf)
 	}
 	
 	buf_tmp = data->payload;
-	len = data->message_size;
-	
+	if ((len = data->message_size) == 0) {
+		sprintf(buf, "Can't add empty string\n");
+		goto send;
+	}
+ 	
 	while (len != 0 && (ret = write(page_fd, buf_tmp, len)) != 0) {
 		if (ret == -1) {
-			if (errno == EINTR)
+			switch(errno) {
+			case EINTR:
 				continue;
-			exit(EIO);
+			case EINVAL:
+				sprintf(buf, "Could not add content to page\n");
+				goto send;
+			default:
+				/* Something serious */
+				perror("Write");
+				exit(EIO);
+			}
 		}
 		
 		/* TODO deal with partial writes */
@@ -223,11 +260,9 @@ int padd_send(struct net_data *data, char *buf)
 		buf_tmp += ret;
 	}	
 	
-	if (ret != -1)
-		sprintf(buf, "Content added successfully\n");
-	else
-		sprintf(buf, "Operation unsuccessful. Error: %s\n", strerror(errno));
-	
+	sprintf(buf, "Content added successfully\n");
+
+send:
 	net_data_init(data, PADD_ID, buf, data->fd);
 	send_net_data(data);
 
@@ -238,7 +273,7 @@ int padd_send(struct net_data *data, char *buf)
 	return 0;
 }
 
-int pread_send(struct net_data *data, char *buf)
+int pread_sv(struct net_data *data, char *buf)
 {
 	ssize_t ret;
 	size_t len;
@@ -259,10 +294,17 @@ int pread_send(struct net_data *data, char *buf)
 	
 	while (len != 0 && (ret = read(page_fd, buf_tmp, len)) != 0) {
 		if (ret == -1) {
-			if (errno == EINTR)
+			switch(errno) {
+			case EINTR:
 				continue;
-			perror("read");
-			exit(EIO);
+			case EINVAL:
+				sprintf(buf, "Error reading content of page buffer\n");
+				goto send;
+			default:
+				/* Something serious */
+				perror("Read");
+				exit(EIO);
+			}
 		}
 
 		len -= ret;
@@ -270,6 +312,7 @@ int pread_send(struct net_data *data, char *buf)
 	}
 	*buf_tmp = '\0';
 
+send:
 	net_data_init(data, PREAD_ID, buf, data->fd);
 	send_net_data(data);
 
@@ -280,7 +323,7 @@ int pread_send(struct net_data *data, char *buf)
 	return 0;
 }
 
-int ping_send(struct net_data *data, char *buf)
+int ping_sv(struct net_data *data, char *buf)
 {
 	printf("Entering function %s\n", __func__);
 
@@ -309,7 +352,7 @@ void server_clean(char *page_buf)
 
 /* Client side */
 
-int stats_rq(struct net_data *data, int sock_fd)
+int stats_cl(struct net_data *data, int sock_fd)
 {
 	printf("Entering function: %s.\n", __func__);
 	
@@ -321,19 +364,19 @@ int stats_rq(struct net_data *data, int sock_fd)
 	return 0;
 }
 
-int add_rq(struct net_data *data, char *msg, int sock_fd)
+int add_cl(struct net_data *data, char *msg, int sock_fd)
 {
 	printf("Entering function: %s.\n", __func__);
 
 	net_data_init(data, LIST_ADD_ID, msg, sock_fd);
 	send_net_data(data);
-
+	
 	printf("Exiting function: %s.\n", __func__);
 
 	return 0;
 }
 
-int del_rq(struct net_data *data, char *msg, int sock_fd)
+int del_cl(struct net_data *data, char *msg, int sock_fd)
 {
 	printf("Entering function: %s.\n", __func__);
 
@@ -345,24 +388,19 @@ int del_rq(struct net_data *data, char *msg, int sock_fd)
 	return 0;
 }
 
-int padd_rq(struct net_data *data, char *msg, int sock_fd)
+int padd_cl(struct net_data *data, char *msg, int sock_fd)
 {		
 	printf("Entering function: %s.\n", __func__);
 
-	if (strlen(msg)) { 
-		net_data_init(data, PADD_ID, msg, sock_fd);
-		send_net_data(data);
-	} else {
-		fprintf(stderr, "Could not send empty string\n");
-		exit(EXIT_FAILURE);
-	}
-		
+	net_data_init(data, PADD_ID, msg, sock_fd);
+	send_net_data(data);
+	
 	printf("Exiting function: %s.\n", __func__);
 
 	return 0;
 }
 
-int pread_rq(struct net_data *data, int sock_fd)
+int pread_cl(struct net_data *data, int sock_fd)
 {
 	printf("Entering function: %s.\n", __func__);
 
@@ -374,7 +412,7 @@ int pread_rq(struct net_data *data, int sock_fd)
 	return 0;
 }
 
-int ping_rq(struct net_data *data, int sock_fd)
+int ping_cl(struct net_data *data, int sock_fd)
 {		
 	printf("Entering function: %s.\n", __func__);
 
@@ -418,7 +456,7 @@ int get_ans_sync(struct net_data *data)
 			if (ret != 0) {
 				switch(ret) {
 				case -EIO:
-					fprintf(stderr, "Server not reachable\n");
+					fprintf(stderr, "Server closed the connection unexpectedly\n");
 					break;
 				case -EINVAL:
 					fprintf(stderr, "Magic number mismatch\n");
@@ -429,7 +467,7 @@ int get_ans_sync(struct net_data *data)
 			}
 
 			/* The server will always send something back */
-			printf("Payload: %s\n", data->payload);
+			printf("%s", data->payload);
 
 			close(data->fd);
 			return 0;

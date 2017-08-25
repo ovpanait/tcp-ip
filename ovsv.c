@@ -103,22 +103,22 @@ int main(int argc, char **argv)
 			else
 				switch (GET_CMD_ID(data.header)) {
 				case LIST_ADD_ID:
-					ladd_send(&data, buf);
+					ladd_sv(&data, buf);
 					break;
 				case LIST_STATS_ID:
-					stats_send(&data, buf);
+					stats_sv(&data, buf);
 					break;
 				case LIST_DEL_ID:
-					ldel_send(&data, buf);
+					ldel_sv(&data, buf);
 					break;
 				case PADD_ID:
-					padd_send(&data, buf);
+					padd_sv(&data, buf);
 					break;
 				case PREAD_ID:
-					pread_send(&data, buf);
+					pread_sv(&data, buf);
 					break;
 				case PING_ID:
-					ping_send(&data, buf);
+					ping_sv(&data, buf);
 					break;
 				}
 			

@@ -41,7 +41,7 @@ int main(int argc, char **argv)
 
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = inet_addr(SRV_ADDR);
-	address.sin_port = htons(9734);
+	address.sin_port = htons(PORT);
 	len = sizeof(address);
 
 	page_size = getpagesize();
@@ -67,25 +67,25 @@ int main(int argc, char **argv)
 
 		switch (opt) {
 		case 's':
-			stats_rq(&data, sock_fd);
+			stats_cl(&data, sock_fd);
 			break;
 		case 'a':
-			add_rq(&data, optarg, sock_fd);
+			add_cl(&data, optarg, sock_fd);
 			break;
 		case 'd':
-			del_rq(&data, optarg, sock_fd);
+			del_cl(&data, optarg, sock_fd);
 			break;	
 		case 'p':
-			padd_rq(&data, optarg, sock_fd);
+			padd_cl(&data, optarg, sock_fd);
 			break;
 		case 'r':
-			pread_rq(&data, sock_fd);
+			pread_cl(&data, sock_fd);
 			break;
 		case 'c':
 			cli_flag = 1;
 			break;
 		case 't':
-			ping_rq(&data, sock_fd);
+			ping_cl(&data, sock_fd);
 			break;
 		}
 

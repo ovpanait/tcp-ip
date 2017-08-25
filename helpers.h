@@ -43,19 +43,19 @@ int net_data_init(struct net_data *data, short command_id, char *payload, int so
 int send_net_data(struct net_data *data);
 int get_net_data(struct net_data *data, int sock_fd);
 
-int stats_rq(struct net_data *data, int sock_fd);
-int add_rq(struct net_data *data, char *msg, int sock_fd);
-int ping_rq(struct net_data *data, int sock_fd);
-int pread_rq(struct net_data *data, int sock_fd);
-int padd_rq(struct net_data *data, char *msg, int sock_fd);
-int del_rq(struct net_data *data, char *msg, int sockf_fd);
+int stats_cl(struct net_data *data, int sock_fd);
+int add_cl(struct net_data *data, char *msg, int sock_fd);
+int ping_cl(struct net_data *data, int sock_fd);
+int pread_cl(struct net_data *data, int sock_fd);
+int padd_cl(struct net_data *data, char *msg, int sock_fd);
+int del_cl(struct net_data *data, char *msg, int sockf_fd);
 
-int stats_send(struct net_data *data, char *buf);
-int ladd_send(struct net_data *data, char *buf);
-int ldel_send(struct net_data *data, char *buf);
-int padd_send(struct net_data *data, char *buf);
-int pread_send(struct net_data *data, char *buf);
-int ping_send(struct net_data *data, char *buf);
+int stats_sv(struct net_data *data, char *buf);
+int ladd_sv(struct net_data *data, char *buf);
+int ldel_sv(struct net_data *data, char *buf);
+int padd_sv(struct net_data *data, char *buf);
+int pread_sv(struct net_data *data, char *buf);
+int ping_sv(struct net_data *data, char *buf);
 
 int get_ans_sync(struct net_data *data);
 
