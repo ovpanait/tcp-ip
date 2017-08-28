@@ -79,19 +79,18 @@ int main(int argc, char **argv)
 	/* Server init */
 	server_fd = server_init();
 	if (debug_mode)
-		printf("< server initialized >\n");
+		printf("Server initialized\n");
 
 	while(1) {
 		struct net_data data;
-
-		printf("Server waiting.\n");
+		uint16_t id;
 
 		client_len = sizeof(client_addr);
 		client_fd = accept(server_fd, (struct sockaddr *)&client_addr,
 				   &client_len);
 
 		if (debug_mode)
-			printf("< client %d connected >\n", client_fd);
+			printf("Client %d connected\n", client_fd);
 
 		pid = fork();
 		if (pid == -1) {
@@ -100,17 +99,15 @@ int main(int argc, char **argv)
 		}
 
 		if (pid == 0) {
-			/* Child will handle client request */
+			/* Child process will handle client request */
 			if (get_net_data(&data, client_fd) != 0) {
 				fprintf(stderr, "Error occurred on get_net_data.\n");
 				/* TODO */
 			}
 			else {
-				uint16_t id;
-
 				id = GET_CMD_ID(data.header);
 				if (debug_mode)
-					printf("< command %u received >\n", id);
+					printf("Command %u received\n", id);
 
 				switch (id) {
 				case LIST_ADD_ID:
