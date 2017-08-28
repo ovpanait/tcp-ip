@@ -409,13 +409,15 @@ int stats_cl(struct net_data *data, char *msg, int sock_fd)
 
 int add_cl(struct net_data *data, char *msg, int sock_fd)
 {
-	printf("Entering function: %s.\n", __func__);
-
+#ifdef DEBUG
+	printf("Exiting function: %s.\n", __func__);
+#endif
 	net_data_init(data, LIST_ADD_ID, msg, sock_fd);
 	send_net_data(data);
 
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
-
+#endif
 	return 0;
 }
 
