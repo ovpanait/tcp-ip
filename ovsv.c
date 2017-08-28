@@ -29,20 +29,20 @@ int main(int argc, char **argv)
 
 	struct sigaction sig;
 	sigset_t mask;
-	
+
 	/* Server-Client */
 	int server_fd;
 	int client_fd;
-	int client_len;
+	socklen_t client_len;
 	struct sockaddr_in client_addr;
-	
+
 	/* Command line */
-	
+
 	int opt;
 	struct option longopts[] = {
 		{"debug", 0, NULL, 'd'},
 		{0, 0, 0, 0} };
-	
+
 	while ((opt = getopt_long_only(argc, argv, ":d", longopts, NULL)) != -1)
 		switch (opt) {
 		case 'd':
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
 	/* Activate debug mode, if necessary */
 	if (debug_mode)
 		printf("Debug mode activated.\n");
-	
+
 	/* Allocate buffer of size PAGE_SIZE */
 	page_size = getpagesize();
 	buf = malloc(page_size);
@@ -77,13 +77,12 @@ int main(int argc, char **argv)
 
 	/* Server init */
 	server_fd = server_init();
-	
+
 	while(1) {
 		struct net_data data;
-		int cmd_id;
 
 		printf("Server waiting.\n");
-	
+
 		client_len = sizeof(client_addr);
 		client_fd = accept(server_fd, (struct sockaddr *)&client_addr,
 				   &client_len);
@@ -93,7 +92,7 @@ int main(int argc, char **argv)
 			perror("fork");
 			exit(EXIT_FAILURE);
 		}
-		
+
 		if (pid == 0) {
 			/* Child will handle client request */
 			if (get_net_data(&data, client_fd) != 0) {
@@ -121,13 +120,13 @@ int main(int argc, char **argv)
 					ping_sv(&data, buf);
 					break;
 				}
-			
+
 			close(client_fd);
 			exit(EXIT_SUCCESS);
 		}
 
 		close(client_fd);
 	}
-	
-	return 0;	
+
+	return 0;
 }

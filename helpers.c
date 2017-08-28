@@ -34,14 +34,17 @@ int server_init(void)
 	int server_len;
 	struct sockaddr_in server_addr;
 
-	/* Change current directory */
+#ifdef DEBUG
+	printf("Entering function: %s.\n", __func__);
+#endif
 
+	/* Change current directory */
 	ret = chdir("/sys/kernel/debug/ovidiu");
 	if (ret == -1) {
 		perror("chdir");
 		exit(EXIT_FAILURE);
 	}
-		
+
 	/* Server info */
 	server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (server_fd == -1) {
@@ -64,17 +67,23 @@ int server_init(void)
 		exit(EXIT_FAILURE);
 	}
 
+#ifdef DEBUG
+	printf("Exiting function: %s.\n", __func__);
+#endif
+
 	return server_fd;
 }
 
 int stats_sv(struct net_data *data, char *buf)
-{	
+{
 	ssize_t ret;
 	size_t len;
 	int stats_fd;
 	char *buf_tmp;
 
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
+#endif
 
 	stats_fd = open("stats", O_RDONLY);
 	if (stats_fd < 0) {
@@ -85,7 +94,7 @@ int stats_sv(struct net_data *data, char *buf)
 
 	buf_tmp = buf;
 	len = page_size - 1;
-	
+
 	while (len != 0 && (ret = read(stats_fd, buf_tmp, len)) != 0) {
 		if (ret == -1) {
 			switch(errno) {
@@ -111,9 +120,10 @@ send:
 	send_net_data(data);
 
 	close(stats_fd);
-	
-	printf("Exiting function: %s.\n", __func__);
 
+#ifdef DEBUG
+	printf("Exiting function: %s.\n", __func__);
+#endif
 	return 0;
 }
 
@@ -124,7 +134,9 @@ int ladd_sv(struct net_data *data, char *buf)
 	int add_fd;
 	char *buf_tmp;
 
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
+#endif
 
 	add_fd = open("add", O_WRONLY);
 	if (add_fd < 0) {
@@ -132,13 +144,13 @@ int ladd_sv(struct net_data *data, char *buf)
 		kill(getppid(), SIGTERM);
 		exit(ENOENT);
 	}
-	
+
 	buf_tmp = data->payload;
 	if ((len = data->message_size) == 0) {
 		sprintf(buf, "Can't add empty string\n");
 		goto send;
 	}
-	
+
 	/* Write payload to kernel list */
 	while (len != 0 && (ret = write(add_fd, buf_tmp, len)) != 0) {
 		if (ret == -1) {
@@ -167,9 +179,10 @@ send:
 	send_net_data(data);
 
 	close(add_fd);
-	
+
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
-	
+#endif
 	return 0;
 }
 
@@ -180,18 +193,20 @@ int ldel_sv(struct net_data *data, char *buf)
 	int del_fd;
 	char *buf_tmp;
 
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
-	
+#endif
+
 	/* Delete list entry */
 	del_fd = open("del", O_WRONLY);
 	if (del_fd < 0) {
 		perror("Opening del file");
 		kill(getppid(), SIGTERM); /* Serious error.
-					   * Kernel module not loaded 
+					   * Kernel module not loaded
 					   */
 		exit(ENOENT);
 	}
-	
+
 	buf_tmp = data->payload;
 	len = data->message_size;
 
@@ -214,8 +229,8 @@ int ldel_sv(struct net_data *data, char *buf)
 		len -= ret;
 		buf_tmp += ret;
 	}
-		
-	
+
+
 	sprintf(buf, "Deleted element form list\n");
 
 send:
@@ -223,9 +238,10 @@ send:
 	send_net_data(data);
 
 	close(del_fd);
-	
-	printf("Exiting function: %s.\n", __func__);
 
+#ifdef DEBUG
+	printf("Exiting function: %s.\n", __func__);
+#endif
 	return 0;
 }
 
@@ -236,21 +252,23 @@ int padd_sv(struct net_data *data, char *buf)
 	int page_fd;
 	char *buf_tmp;
 
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
-	
+#endif
+
 	page_fd = open("page", O_WRONLY);
 	if (page_fd < 0) {
 		perror("Opening del file");
 		kill(getppid(), SIGTERM);
 		exit(ENOENT);
 	}
-	
+
 	buf_tmp = data->payload;
 	if ((len = data->message_size) == 0) {
 		sprintf(buf, "Can't add empty string\n");
 		goto send;
 	}
- 	
+
 	while (len != 0 && (ret = write(page_fd, buf_tmp, len)) != 0) {
 		if (ret == -1) {
 			switch(errno) {
@@ -265,12 +283,12 @@ int padd_sv(struct net_data *data, char *buf)
 				exit(EIO);
 			}
 		}
-		
+
 		/* TODO deal with partial writes */
 		len -= ret;
 		buf_tmp += ret;
-	}	
-	
+	}
+
 	sprintf(buf, "Content added successfully\n");
 
 send:
@@ -278,8 +296,10 @@ send:
 	send_net_data(data);
 
 	close(page_fd);
-	
+
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
+#endif
 
 	return 0;
 }
@@ -291,7 +311,9 @@ int pread_sv(struct net_data *data, char *buf)
 	int page_fd;
 	char *buf_tmp;
 
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
+#endif
 
 	page_fd = open("page", O_RDONLY);
 	if (page_fd < 0) {
@@ -302,7 +324,7 @@ int pread_sv(struct net_data *data, char *buf)
 
 	buf_tmp = buf;
 	len = page_size - 1;
-	
+
 	while (len != 0 && (ret = read(page_fd, buf_tmp, len)) != 0) {
 		if (ret == -1) {
 			switch(errno) {
@@ -328,23 +350,29 @@ send:
 	send_net_data(data);
 
 	close(page_fd);
-	
+
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
+#endif
 
 	return 0;
 }
 
 int ping_sv(struct net_data *data, char *buf)
 {
-	printf("Entering function %s\n", __func__);
+#ifdef DEBUG
+	printf("Entering function: %s.\n", __func__);
+#endif
 
 	sprintf(buf, "Server is alive\n");
 
 	net_data_init(data, PING_ID, buf, data->fd);
 	send_net_data(data);
 
-	printf("Exiting function %s\n", __func__);
-	
+#ifdef DEBUG
+	printf("Exiting function: %s.\n", __func__);
+#endif
+
 	return 0;
 }
 
@@ -354,9 +382,9 @@ void server_clean(char *page_buf)
 
 	fprintf(stderr, "Waiting for all children to exit\n");
 	while ((pid = wait(NULL)) > 0);
-	
+
 	free(page_buf);
-	
+
 	fprintf(stderr, "Shutting server down\n");
 	exit(EXIT_FAILURE);
 }
@@ -365,13 +393,17 @@ void server_clean(char *page_buf)
 
 int stats_cl(struct net_data *data, char *msg, int sock_fd)
 {
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
-	
+#endif
+
 	net_data_init(data, LIST_STATS_ID, NULL, sock_fd);
 	send_net_data(data);
 
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
-	
+#endif
+
 	return 0;
 }
 
@@ -381,7 +413,7 @@ int add_cl(struct net_data *data, char *msg, int sock_fd)
 
 	net_data_init(data, LIST_ADD_ID, msg, sock_fd);
 	send_net_data(data);
-	
+
 	printf("Exiting function: %s.\n", __func__);
 
 	return 0;
@@ -389,48 +421,64 @@ int add_cl(struct net_data *data, char *msg, int sock_fd)
 
 int del_cl(struct net_data *data, char *msg, int sock_fd)
 {
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
+#endif
 
 	net_data_init(data, LIST_DEL_ID, msg, sock_fd);
 	send_net_data(data);
 
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
+#endif
 
 	return 0;
 }
 
 int padd_cl(struct net_data *data, char *msg, int sock_fd)
-{		
+{
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
+#endif
 
 	net_data_init(data, PADD_ID, msg, sock_fd);
 	send_net_data(data);
-	
+
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
+#endif
 
 	return 0;
 }
 
 int pread_cl(struct net_data *data, char *msg, int sock_fd)
 {
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
+#endif
 
 	net_data_init(data, PREAD_ID, NULL, sock_fd);
 	send_net_data(data);
 
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
+#endif
 
 	return 0;
 }
 
 int ping_cl(struct net_data *data, char *msg, int sock_fd)
-{		
+{
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
+#endif
 
 	net_data_init(data, PING_ID, NULL, sock_fd);
 	send_net_data(data);
 
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
+#endif
 
 	return 0;
 }
@@ -449,22 +497,26 @@ int get_ans_sync(struct net_data *data)
 	int ret;
 	struct timeval tv;
 
+#ifdef DEBUG
+	printf("Entering function: %s.\n", __func__);
+#endif
+
 	timeout = TIMEOUT;
-	
+
 	FD_ZERO(&read_fds);
 	FD_SET(data->fd, &read_fds);
-	
+
 	while (timeout) {
 		ret = select(data->fd + 1, &read_fds, NULL, NULL, &tv);
 		if (ret == -1) {
 			perror("select");
 			exit(EXIT_FAILURE);
 		}
-		
+
 		if (FD_ISSET(data->fd, &read_fds) == 0) {
 			tv.tv_sec = 1;
 			tv.tv_usec = 0;
-	
+
 			--timeout;
 			printf("%d seconds until timeout.\n", timeout);
 		} else {
@@ -493,18 +545,25 @@ int get_ans_sync(struct net_data *data)
 
 	/* Timeout occurred - TODO */
 	printf("Timeout\n");
-	
+
+#ifdef DEBUG
+	printf("Exiting function: %s.\n", __func__);
+#endif
+
 	return -1;
 }
 
 /* The buffers are supposed to be at least of size MAX_LEN */
 int parse_line(char *cmd, char *arg)
 {
-	int c;
 	short quote;
 
 	char line[MAX_LINE];
 	char *p;
+
+#ifdef DEBUG
+	printf("Entering function: %s.\n", __func__);
+#endif
 
 	p = fgets(line, MAX_LINE, stdin);
 	if (p == NULL) {
@@ -512,7 +571,7 @@ int parse_line(char *cmd, char *arg)
 			perror("fgets");
 			exit(EXIT_FAILURE);
 		}
-	
+
 		if(feof(stdin))
 			return -EINVAL;
 	}
@@ -520,11 +579,11 @@ int parse_line(char *cmd, char *arg)
 	quote = 0;
 	*cmd = '\0';
 	*arg = '\0';
-	
+
 	/* Skip whitespaces */
 	while (*p && *p != '\n' && isspace(*p))
 		++p;
-	
+
 	if (*p == '\0' || isspace(*p))
 		return -EINVAL;
 
@@ -554,15 +613,23 @@ int parse_line(char *cmd, char *arg)
 	}
 	*arg = '\0';
 
+#ifdef DEBUG
+	printf("Exiting function: %s.\n", __func__);
+#endif
+
 	/* Check for unbalanced double quotes */
 	if (quote)
 		return -EINVAL;
-       
+
 	return 0;
 }
 
 struct command *get_cmdp(char *cmd)
 {
+#ifdef DEBUG
+	printf("Entering function: %s.\n", __func__);
+#endif
+
 	struct command *p;
 
 	p = commands;
@@ -572,6 +639,10 @@ struct command *get_cmdp(char *cmd)
 		++p;
 	}
 
+#ifdef DEBUG
+	printf("Exiting function: %s.\n", __func__);
+#endif
+
 	return NULL;
 }
 
@@ -580,19 +651,25 @@ struct command *get_cmdp(char *cmd)
 /* Call with payload = NULL for commands that do not send data */
 int net_data_init(struct net_data *data, short command_id, char *payload, int sock_fd)
 {
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
-	
+#endif
+
 	data->header = MAGIC_NR;
 	data->header |= ((uint32_t)command_id << 16);
 	data->header = htonl(data->header); /* Host to network endianness */
-	
+
 	data->message_size = 0;
 	data->payload = payload;
 	if (payload != NULL)
 		data->message_size = strlen(payload);
 
 	data->fd = sock_fd;
-	
+
+#ifdef DEBUG
+	printf("Exiting function: %s.\n", __func__);
+#endif
+
 	return 0;
 }
 
@@ -601,7 +678,11 @@ int send_net_data(struct net_data *data)
 	uint8_t *buf, *buf_tmp;
 	size_t data_len;
 	ssize_t ret;
-	
+
+#ifdef DEBUG
+	printf("Entering function: %s.\n", __func__);
+#endif
+
 	data_len = sizeof(data->header) + sizeof(data->message_size) + data->message_size;
 	buf = malloc(data_len);
 	if (buf == NULL) {
@@ -609,16 +690,16 @@ int send_net_data(struct net_data *data)
 		exit(EXIT_FAILURE);
 	}
 	buf_tmp = buf; /* Save this address for later use.
-			* Perform pointer arithmetic on buf_tmp. 
+			* Perform pointer arithmetic on buf_tmp.
 			*/
 
 	/* Serialization */
 	memcpy(buf_tmp, &data->header, sizeof(data->header));
 	buf_tmp += sizeof(data->header);
-	
+
 	memcpy(buf_tmp, &data->message_size, sizeof(data->message_size));
 	buf_tmp += sizeof(data->message_size);
-	
+
 	if (data->message_size > 0)
 		memcpy(buf_tmp, data->payload, data->message_size);
 
@@ -638,7 +719,7 @@ int send_net_data(struct net_data *data)
 
 	/* Cleanup */
 	free(buf);
-	
+
 	return 0;
 }
 
@@ -648,12 +729,14 @@ int get_net_data(struct net_data *data, int sock_fd) {
 	uint32_t *header_buf, *msg_size_buf;
 	char *buf;
 
-	printf("Entering function: %s\n", __func__);
+#ifdef DEBUG
+	printf("Entering function: %s.\n", __func__);
+#endif
 
 	/* Read header*/
 	len = sizeof(data->header);
 	header_buf = &data->header;
-	
+
 	while (len != 0 && (ret = read(sock_fd, header_buf, len)) != 0) {
 		if (ret == -1) {
 			if (errno == EINTR)
@@ -670,7 +753,7 @@ int get_net_data(struct net_data *data, int sock_fd) {
 	 */
 	if (ret == 0)
 		return -EIO;
-	
+
 	/* Validate header */
 	data->header = ntohl(data->header);/* Convert from network to host endianness */
 	if (GET_MAGIC(data->header) != MAGIC_NR) {
@@ -681,7 +764,7 @@ int get_net_data(struct net_data *data, int sock_fd) {
 	/* Read message size */
 	len = sizeof(data->message_size);
 	msg_size_buf = &data->message_size;
-	
+
 	while (len != 0 && (ret = read(sock_fd, msg_size_buf, len)) != 0) {
 		if (ret == -1) {
 			if (errno == EINTR)
@@ -696,7 +779,7 @@ int get_net_data(struct net_data *data, int sock_fd) {
 	}
 	if (ret == 0)
 		return -EIO;
-	
+
 	/* Copy socket fd */
 	data->fd = sock_fd;
 
@@ -711,7 +794,7 @@ int get_net_data(struct net_data *data, int sock_fd) {
 		exit(EXIT_FAILURE);
 	}
 	buf = data->payload;
-	
+
 	while (len != 0 && (ret = read(sock_fd, buf, len)) != 0) {
 		if (ret == -1) {
 			if (errno == EINTR)
@@ -720,7 +803,7 @@ int get_net_data(struct net_data *data, int sock_fd) {
 			perror("read");
 			break;
 		}
-		
+
 		len -= ret;
 		buf += ret;
 	}
@@ -728,8 +811,10 @@ int get_net_data(struct net_data *data, int sock_fd) {
 
 	if (ret == 0)
 		return -EIO;
-	
-	printf("Exiting function: %s\n", __func__);
+
+#ifdef DEBUG
+	printf("Exiting function: %s.\n", __func__);
+#endif
 
 	return 0;
 }
