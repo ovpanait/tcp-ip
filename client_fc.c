@@ -29,94 +29,94 @@ struct command commands[] = {
 
 int stats_cl(struct net_data *data, char *msg, int sock_fd)
 {
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
-	#endif
+#endif
 
 	net_data_init(data, LIST_STATS_ID, NULL, sock_fd);
 	send_net_data(data);
 
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
-	#endif
+#endif
 
 	return 0;
 }
 
 int add_cl(struct net_data *data, char *msg, int sock_fd)
 {
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
-	#endif
+#endif
 	net_data_init(data, LIST_ADD_ID, msg, sock_fd);
 	send_net_data(data);
 
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
-	#endif
+#endif
 	return 0;
 }
 
 int del_cl(struct net_data *data, char *msg, int sock_fd)
 {
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
-	#endif
+#endif
 
 	net_data_init(data, LIST_DEL_ID, msg, sock_fd);
 	send_net_data(data);
 
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
-	#endif
+#endif
 
 	return 0;
 }
 
 int padd_cl(struct net_data *data, char *msg, int sock_fd)
 {
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
-	#endif
+#endif
 
 	net_data_init(data, PADD_ID, msg, sock_fd);
 	send_net_data(data);
 
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
-	#endif
+#endif
 
 	return 0;
 }
 
 int pread_cl(struct net_data *data, char *msg, int sock_fd)
 {
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
-	#endif
+#endif
 
 	net_data_init(data, PREAD_ID, NULL, sock_fd);
 	send_net_data(data);
 
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
-	#endif
+#endif
 
 	return 0;
 }
 
 int ping_cl(struct net_data *data, char *msg, int sock_fd)
 {
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
-	#endif
+#endif
 
 	net_data_init(data, PING_ID, NULL, sock_fd);
 	send_net_data(data);
 
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
-	#endif
+#endif
 
 	return 0;
 }
@@ -135,9 +135,9 @@ int get_ans_sync(struct net_data *data)
 	int ret;
 	struct timeval tv;
 
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
-	#endif
+#endif
 
 	timeout = TIMEOUT;
 
@@ -184,9 +184,9 @@ int get_ans_sync(struct net_data *data)
 	/* Timeout occurred - TODO */
 	printf("Timeout\n");
 
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
-	#endif
+#endif
 
 	return -1;
 }
@@ -199,9 +199,9 @@ int parse_line(char *cmd, char *arg)
 	char line[MAX_LINE];
 	char *p;
 
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
-	#endif
+#endif
 
 	p = fgets(line, MAX_LINE, stdin);
 	if (p == NULL) {
@@ -251,9 +251,9 @@ int parse_line(char *cmd, char *arg)
 	}
 	*arg = '\0';
 
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
-	#endif
+#endif
 
 	/* Check for unbalanced double quotes */
 	if (quote)
@@ -264,9 +264,9 @@ int parse_line(char *cmd, char *arg)
 
 struct command *get_cmdp(char *cmd)
 {
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
-	#endif
+#endif
 
 	struct command *p;
 
@@ -277,9 +277,9 @@ struct command *get_cmdp(char *cmd)
 		++p;
 	}
 
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
-	#endif
+#endif
 
 	return NULL;
 }

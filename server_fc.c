@@ -21,9 +21,9 @@ int server_init(void)
 	socklen_t server_len;
 	struct sockaddr_in server_addr;
 
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
-	#endif
+#endif
 
 	/* Change current directory */
 	ret = chdir("/sys/kernel/debug/ovidiu");
@@ -54,9 +54,9 @@ int server_init(void)
 		exit(EXIT_FAILURE);
 	}
 
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
-	#endif
+#endif
 
 	return server_fd;
 }
@@ -68,9 +68,9 @@ int stats_sv(struct net_data *data, char *buf)
 	int stats_fd;
 	char *buf_tmp;
 
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
-	#endif
+#endif
 
 	stats_fd = open("stats", O_RDONLY);
 	if (stats_fd < 0) {
@@ -108,9 +108,9 @@ send:
 
 	close(stats_fd);
 
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
-	#endif
+#endif
 	return 0;
 }
 
@@ -121,9 +121,9 @@ int ladd_sv(struct net_data *data, char *buf)
 	int add_fd;
 	char *buf_tmp;
 
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
-	#endif
+#endif
 
 	add_fd = open("add", O_WRONLY);
 	if (add_fd < 0) {
@@ -167,9 +167,9 @@ send:
 
 	close(add_fd);
 
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
-	#endif
+#endif
 	return 0;
 }
 
@@ -180,9 +180,9 @@ int ldel_sv(struct net_data *data, char *buf)
 	int del_fd;
 	char *buf_tmp;
 
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
-	#endif
+#endif
 
 	/* Delete list entry */
 	del_fd = open("del", O_WRONLY);
@@ -226,9 +226,9 @@ send:
 
 	close(del_fd);
 
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
-	#endif
+#endif
 	return 0;
 }
 
@@ -239,9 +239,9 @@ int padd_sv(struct net_data *data, char *buf)
 	int page_fd;
 	char *buf_tmp;
 
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
-	#endif
+#endif
 
 	page_fd = open("page", O_WRONLY);
 	if (page_fd < 0) {
@@ -284,9 +284,9 @@ send:
 
 	close(page_fd);
 
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
-	#endif
+#endif
 
 	return 0;
 }
@@ -298,9 +298,9 @@ int pread_sv(struct net_data *data, char *buf)
 	int page_fd;
 	char *buf_tmp;
 
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
-	#endif
+#endif
 
 	page_fd = open("page", O_RDONLY);
 	if (page_fd < 0) {
@@ -338,27 +338,27 @@ send:
 
 	close(page_fd);
 
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
-	#endif
+#endif
 
 	return 0;
 }
 
 int ping_sv(struct net_data *data, char *buf)
 {
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Entering function: %s.\n", __func__);
-	#endif
+#endif
 
 	sprintf(buf, "Server is alive\n");
 
 	net_data_init(data, PING_ID, buf, data->fd);
 	send_net_data(data);
 
-	#ifdef DEBUG
+#ifdef DEBUG
 	printf("Exiting function: %s.\n", __func__);
-	#endif
+#endif
 
 	return 0;
 }
