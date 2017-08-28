@@ -14,6 +14,16 @@
 #include "helpers.h"
 
 int page_size;
+struct command commands[] = {
+	{"add", LIST_ADD_ID, &add_cl},
+	{"del", LIST_DEL_ID, &del_cl},
+	{"stats", LIST_STATS_ID, &stats_cl},
+	{"padd", PADD_ID, &padd_cl},
+	{"pread", PREAD_ID, &pread_cl},
+	{"ping", PING_ID, &ping_cl},
+	{"exit", 0, &exit_cli},
+	{"", 0, NULL}
+};
 
 /* Server side */
 
@@ -353,7 +363,7 @@ void server_clean(char *page_buf)
 
 /* Client side */
 
-int stats_cl(struct net_data *data, int sock_fd)
+int stats_cl(struct net_data *data, char *msg, int sock_fd)
 {
 	printf("Entering function: %s.\n", __func__);
 	
@@ -401,7 +411,7 @@ int padd_cl(struct net_data *data, char *msg, int sock_fd)
 	return 0;
 }
 
-int pread_cl(struct net_data *data, int sock_fd)
+int pread_cl(struct net_data *data, char *msg, int sock_fd)
 {
 	printf("Entering function: %s.\n", __func__);
 
@@ -413,7 +423,7 @@ int pread_cl(struct net_data *data, int sock_fd)
 	return 0;
 }
 
-int ping_cl(struct net_data *data, int sock_fd)
+int ping_cl(struct net_data *data, char *msg, int sock_fd)
 {		
 	printf("Entering function: %s.\n", __func__);
 
@@ -423,6 +433,12 @@ int ping_cl(struct net_data *data, int sock_fd)
 	printf("Exiting function: %s.\n", __func__);
 
 	return 0;
+}
+
+int exit_cli(struct net_data *data, char *msg, int sock_fd)
+{
+	printf("Exiting CLI......\n");
+	exit(EXIT_SUCCESS);
 }
 
 /* Handle received messages synchronously */
@@ -501,39 +517,31 @@ int parse_line(char *cmd, char *arg)
 			return -EINVAL;
 	}
 
-	printf("s=%s\n", p);
 	quote = 0;
-
-	printf("DEBUG1\n");
+	*cmd = '\0';
+	*arg = '\0';
 	
 	/* Skip whitespaces */
-	while (*p && *p != '\n' && isspace(*p)) {
-		printf("inifnite");
+	while (*p && *p != '\n' && isspace(*p))
 		++p;
-	}
 	
 	if (*p == '\0' || isspace(*p))
 		return -EINVAL;
 
-	printf("DEBUG2\n");
 	/* Fill cmd buffer */
 	while (*p && !isspace(*p))
 		*cmd++ = *p++;
 	*cmd = '\0';
 
-	printf("DEBUG3\n");
 	/* Skip whitespaces */
-	while (*p && *p != '\n' && isspace(*p)) {
-		printf("infinite\n");
+	while (*p && *p != '\n' && isspace(*p))
 		++p;
-	}
+
 	if (*p == '\0' || isspace(*p))
 		return 0;
 
-	printf("DEBUG4\n");
 	/* Fill arg buffer - Take double quotes into consideration - */
 	while (*p && *p != '\n' && (quote || !isspace(*p))) {
-		printf("loop\n");
 		switch (*p) {
 		case '\"':
 			quote = !quote;
@@ -546,12 +554,25 @@ int parse_line(char *cmd, char *arg)
 	}
 	*arg = '\0';
 
-	printf("DEBUG5\n");
 	/* Check for unbalanced double quotes */
 	if (quote)
 		return -EINVAL;
        
 	return 0;
+}
+
+struct command *get_cmdp(char *cmd)
+{
+	struct command *p;
+
+	p = commands;
+	while (*(p->name)) {
+		if (strcmp(p->name, cmd) == 0)
+			return p;
+		++p;
+	}
+
+	return NULL;
 }
 
 /* Common */
@@ -563,7 +584,6 @@ int net_data_init(struct net_data *data, short command_id, char *payload, int so
 	
 	data->header = MAGIC_NR;
 	data->header |= ((uint32_t)command_id << 16);
-	printf("Filled net_data structure with data->header = %08x.\n", data->header);
 	data->header = htonl(data->header); /* Host to network endianness */
 	
 	data->message_size = 0;
@@ -653,7 +673,6 @@ int get_net_data(struct net_data *data, int sock_fd) {
 	
 	/* Validate header */
 	data->header = ntohl(data->header);/* Convert from network to host endianness */
-	printf("Got header: %08x \n", data->header); /* DEBUG */
 	if (GET_MAGIC(data->header) != MAGIC_NR) {
 		fprintf(stderr, "MAGIC NUMBER mismatch\n");
 		return -EINVAL;
@@ -672,7 +691,6 @@ int get_net_data(struct net_data *data, int sock_fd) {
 			break;
 		}
 
-		printf("Read %ld bytes form message_size\n", ret);
 		len -= ret;
 		msg_size_buf += ret;
 	}

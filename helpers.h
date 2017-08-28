@@ -35,8 +35,14 @@ struct net_data {
 	int fd; /* The file descriptor the message is bound to */
 };
 
-extern int page_size;
+struct command {
+	char name[7];
+	uint16_t id;
+	int (*fc) (struct net_data *, char *, int);
+};
 
+extern int page_size;
+extern struct command commands[];
 /* Prototypes */
 int server_init(void);
 void server_clean(char *page_buf);
@@ -45,12 +51,13 @@ int net_data_init(struct net_data *data, short command_id, char *payload, int so
 int send_net_data(struct net_data *data);
 int get_net_data(struct net_data *data, int sock_fd);
 
-int stats_cl(struct net_data *data, int sock_fd);
+int stats_cl(struct net_data *data, char *msg, int sock_fd);
 int add_cl(struct net_data *data, char *msg, int sock_fd);
-int ping_cl(struct net_data *data, int sock_fd);
-int pread_cl(struct net_data *data, int sock_fd);
+int ping_cl(struct net_data *data, char *msg, int sock_fd);
+int pread_cl(struct net_data *data, char *msg,  int sock_fd);
 int padd_cl(struct net_data *data, char *msg, int sock_fd);
 int del_cl(struct net_data *data, char *msg, int sockf_fd);
+int exit_cli(struct net_data *data, char *msg, int sockf_fd);
 
 int stats_sv(struct net_data *data, char *buf);
 int ladd_sv(struct net_data *data, char *buf);
@@ -62,5 +69,6 @@ int ping_sv(struct net_data *data, char *buf);
 int get_ans_sync(struct net_data *data);
 
 int parse_line(char *cmd, char *arg);
+struct command *get_cmdp(char *cmd);
 
 #endif

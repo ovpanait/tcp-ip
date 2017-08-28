@@ -67,7 +67,7 @@ int main(int argc, char **argv)
 
 		switch (opt) {
 		case 's':
-			stats_cl(&data, sock_fd);
+			stats_cl(&data, NULL, sock_fd);
 			break;
 		case 'a':
 			add_cl(&data, optarg, sock_fd);
@@ -79,13 +79,13 @@ int main(int argc, char **argv)
 			padd_cl(&data, optarg, sock_fd);
 			break;
 		case 'r':
-			pread_cl(&data, sock_fd);
+			pread_cl(&data, NULL, sock_fd);
 			break;
 		case 'c':
 			cli_flag = 1;
 			continue;
 		case 't':
-			ping_cl(&data, sock_fd);
+			ping_cl(&data, NULL, sock_fd);
 			break;
 		}
 
@@ -99,9 +99,32 @@ int main(int argc, char **argv)
 	char cmd[MAX_LINE], arg[MAX_LINE];
 	
 	while (cli_flag) {
-		if (parse_line(cmd, arg) == 0) {
-			printf("Result:%s %s\n", cmd, arg);
+		struct net_data data;
+		struct command *cmdp;
+
+		/* Parse input, retrieving command and argument string */
+		if (parse_line(cmd, arg) == -EINVAL) {
+			printf("Invalid input format\n");
+			continue;
 		}
+
+		/* Check whether cmd is a valid command */
+		cmdp = get_cmdp(cmd); 
+		if (cmdp == NULL) {
+			printf("Invalid command\n");
+			continue;
+		}
+
+		/* Send request and get answer */
+		sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+		result = connect(sock_fd, (struct sockaddr *)&address, len);
+		if(result == -1) {
+			perror("connect");
+			exit(EXIT_FAILURE);
+		}
+
+		cmdp->fc(&data, arg, sock_fd);
+		get_ans_sync(&data);
 	}
 	
 	return 0;
