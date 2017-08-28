@@ -12,7 +12,8 @@
 #define _GNU_SOURCE
 #include <getopt.h>
 
-#include "helpers.h"
+#include "common.h"
+#include "client.h"
 
 static char *buf;
 static int cli_flag;
@@ -51,13 +52,13 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 	buf[page_size - 1] = '\0';
-	
+
 	/* Perform operations based on command line parameters */
-	
+
 	while ((opt = getopt_long_only(argc, argv, "", longopts, NULL)) != -1 &&
 	       (opt != '?')) {
 		struct net_data data;
-		
+
 		sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 		result = connect(sock_fd, (struct sockaddr *)&address, len);
 		if(result == -1) {
@@ -74,7 +75,7 @@ int main(int argc, char **argv)
 			break;
 		case 'd':
 			del_cl(&data, optarg, sock_fd);
-			break;	
+			break;
 		case 'p':
 			padd_cl(&data, optarg, sock_fd);
 			break;
@@ -89,7 +90,7 @@ int main(int argc, char **argv)
 			break;
 		}
 
-		/* The server must send something back, until a timeout 
+		/* The server must send something back, until a timeout
 		 * occurs.
 		 */
 		get_ans_sync(&data);
@@ -97,7 +98,7 @@ int main(int argc, char **argv)
 
 	/* Start command line mode, if the case */
 	char cmd[MAX_LINE], arg[MAX_LINE];
-	
+
 	while (cli_flag) {
 		struct net_data data;
 		struct command *cmdp;
@@ -109,7 +110,7 @@ int main(int argc, char **argv)
 		}
 
 		/* Check whether cmd is a valid command */
-		cmdp = get_cmdp(cmd); 
+		cmdp = get_cmdp(cmd);
 		if (cmdp == NULL) {
 			printf("Invalid command\n");
 			continue;
@@ -126,6 +127,6 @@ int main(int argc, char **argv)
 		cmdp->fc(&data, arg, sock_fd);
 		get_ans_sync(&data);
 	}
-	
+
 	return 0;
 }

@@ -7,8 +7,8 @@ CFLAGS = -Wall -Werror -Wextra -Wno-unused-parameter
 #
 #
 #
-SV_OBJS = ovsv.o helpers.o
-CL_OBJS = ovcl.o helpers.o
+SV_OBJS = server.o server_fc.o common.o
+CL_OBJS = client.o client_fc.o common.o
 
 .PHONY: clean
 
@@ -25,5 +25,6 @@ debug: image
 clean:
 	-rm server client *.o 2> /dev/null
 
-$(SV_OBJS) $(CL_OBJS): helpers.c
-helpers.c : helpers.h
+$(SV_OBJS) : server.h common.c server_fc.c
+$(CL_OBJS) : client.h common.c client_fc.c
+common.c : common.h

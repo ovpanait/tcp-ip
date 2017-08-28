@@ -12,7 +12,8 @@
 #define _GNU_SOURCE
 #include <getopt.h>
 
-#include "helpers.h"
+#include "common.h"
+#include "server.h"
 
 static char debug_mode;
 static char *buf;
