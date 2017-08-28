@@ -77,6 +77,8 @@ int main(int argc, char **argv)
 
 	/* Server init */
 	server_fd = server_init();
+	if (debug_mode)
+		printf("< server initialized >\n");
 
 	while(1) {
 		struct net_data data;
@@ -86,6 +88,9 @@ int main(int argc, char **argv)
 		client_len = sizeof(client_addr);
 		client_fd = accept(server_fd, (struct sockaddr *)&client_addr,
 				   &client_len);
+
+		if (debug_mode)
+			printf("< client %d connected >\n", client_fd);
 
 		pid = fork();
 		if (pid == -1) {
@@ -99,8 +104,14 @@ int main(int argc, char **argv)
 				fprintf(stderr, "Error occurred on get_net_data.\n");
 				/* TODO */
 			}
-			else
-				switch (GET_CMD_ID(data.header)) {
+			else {
+				uint16_t id;
+
+				id = GET_CMD_ID(data.header);
+				if (debug_mode)
+					printf("< command %u received >\n", id);
+
+				switch (id) {
 				case LIST_ADD_ID:
 					ladd_sv(&data, buf);
 					break;
@@ -120,6 +131,7 @@ int main(int argc, char **argv)
 					ping_sv(&data, buf);
 					break;
 				}
+			}
 
 			close(client_fd);
 			exit(EXIT_SUCCESS);
