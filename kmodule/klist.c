@@ -153,19 +153,28 @@ static ssize_t del_write(struct file *file, const char __user *buf,
 
 	if (len > PAGE_SIZE - 1) {
 		pr_err("Maximum size allowed: %lu\n", PAGE_SIZE - 1);
-		goto fail;
+		goto exit;
 	}
 
 	ret = kstrtoint_from_user(buf, len, 10, &seq);
 	if (ret < 0) {
 		pr_err("kstrtoint_from_user - Invalid input.\n");
-		goto fail;
+		goto exit;
 	}
 
+	if (seq == 0) {
+		entity_cleanall();
+		stats.deleted += stats.available;
+		stats.available = 0;
+		stats.footprint = 0;
+		
+		goto exit;
+	}
+	
 	ret = entity_remove(seq);
 	if (ret < 0) {
 		pr_err("%d doesn't exist in the list. Exiting.\n", seq);
-		goto fail;
+		goto exit;
 	}
 
 	++stats.deleted;
@@ -174,7 +183,7 @@ static ssize_t del_write(struct file *file, const char __user *buf,
 
 	pr_debug("Deleted element with seq: %d\n", seq);
 	ret = len;
-fail:
+exit:
 	pr_debug("Exiting function: %s\n", __func__);
 	mutex_unlock(&io_mutex);
 	return ret;
