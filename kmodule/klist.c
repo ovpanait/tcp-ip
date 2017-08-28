@@ -167,6 +167,8 @@ static ssize_t del_write(struct file *file, const char __user *buf,
 		stats.deleted += stats.available;
 		stats.available = 0;
 		stats.footprint = 0;
+
+		pr_debug("Cleared the list\n");
 		
 		goto exit;
 	}
