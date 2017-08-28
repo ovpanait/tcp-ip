@@ -31,7 +31,7 @@ int server_init(void)
 {
 	int ret;
 	int server_fd;
-	int server_len;
+	socklen_t server_len;
 	struct sockaddr_in server_addr;
 
 #ifdef DEBUG
