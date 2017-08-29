@@ -138,11 +138,11 @@ int get_ans_sync(struct net_data *data)
 #endif
 
 	timeout = TIMEOUT;
-
-	FD_ZERO(&read_fds);
-	FD_SET(data->fd, &read_fds);
-
+	
 	while (timeout) {
+		FD_ZERO(&read_fds);
+		FD_SET(data->fd, &read_fds);
+
 		ret = select(FD_SETSIZE, &read_fds, NULL, NULL, &tv);
 		if (ret == -1) {
 			perror("select");
