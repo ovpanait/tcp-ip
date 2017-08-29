@@ -55,7 +55,7 @@ int send_net_data(struct net_data *data)
 	data_len = sizeof(data->header) + sizeof(data->message_size) + data->message_size;
 	buf = malloc(data_len);
 	if (buf == NULL) {
-		fprintf(stderr, "Failed to allocate %lu bytes.\n", data_len);
+		fprintf(stderr, "Failed to allocate %zu bytes.\n", data_len);
 		exit(EXIT_FAILURE);
 	}
 	buf_tmp = buf; /* Save this address for later use.
@@ -159,7 +159,7 @@ int get_net_data(struct net_data *data, int sock_fd) {
 	len = data->message_size;
 	data->payload = malloc(len + 1);
 	if (data->payload == NULL) {
-		fprintf(stderr, "Error allocationg %lu bytes.\n", len);
+		fprintf(stderr, "Error allocationg %zxu bytes.\n", len);
 		exit(EXIT_FAILURE);
 	}
 	buf = data->payload;
