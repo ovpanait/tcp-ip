@@ -20,11 +20,12 @@ static int cli_flag;
 
 int main(int argc, char **argv)
 {
-	/* File descriptors */
 	int len;
 	int sock_fd;
 	struct sockaddr_in address;
 	int result;
+
+	char cmd[MAX_LINE], arg[MAX_LINE];
 
 	/* Command line parameter parsing */
 	int opt;
@@ -97,13 +98,12 @@ int main(int argc, char **argv)
 	}
 
 	/* Start command line mode, if the case */
-	char cmd[MAX_LINE], arg[MAX_LINE];
 
 	while (cli_flag) {
 		struct net_data data;
 		struct command *cmdp;
 
-		/* Parse input, retrieving command and argument string */
+		/* Parse input, retrieving command and argument */
 		if (parse_line(cmd, arg) == -EINVAL) {
 			printf("Invalid input format\n");
 			continue;

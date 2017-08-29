@@ -27,7 +27,7 @@ int main(int argc, char **argv)
 {
 	/* Auxiliary */
 	pid_t pid;
-
+	
 	struct sigaction sig;
 	sigset_t mask;
 
@@ -54,8 +54,8 @@ int main(int argc, char **argv)
 	/* Activate debug mode, if necessary */
 	if (debug_mode)
 		printf("Debug mode activated.\n");
-
-	/* Allocate buffer of size PAGE_SIZE */
+	
+	/* Allocate buffer of size PAGE_SIZE, to be passed around. */
 	page_size = getpagesize();
 	buf = malloc(page_size);
 	if (buf == NULL) {
@@ -88,10 +88,7 @@ int main(int argc, char **argv)
 		client_len = sizeof(client_addr);
 		client_fd = accept(server_fd, (struct sockaddr *)&client_addr,
 				   &client_len);
-
-		if (debug_mode)
-			printf("Client %d connected\n", client_fd);
-
+		
 		pid = fork();
 		if (pid == -1) {
 			perror("fork");
@@ -107,7 +104,8 @@ int main(int argc, char **argv)
 			else {
 				id = GET_CMD_ID(data.header);
 				if (debug_mode)
-					printf("Command %u received\n", id);
+					printf("Command %u received from client %d\n",
+					       id, getpid());
 
 				switch (id) {
 				case LIST_ADD_ID:
@@ -129,12 +127,19 @@ int main(int argc, char **argv)
 					ping_sv(&data, buf);
 					break;
 				}
+
+				if (debug_mode)
+					printf("Executed command %u for client %d\n",
+					       id, getpid());
 			}
 
 			close(client_fd);
 			exit(EXIT_SUCCESS);
 		}
 
+		
+		if (debug_mode)
+			printf("Client %d connected\n", pid);
 		close(client_fd);
 	}
 

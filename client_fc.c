@@ -25,8 +25,6 @@ struct command commands[] = {
 	{"", 0, NULL}
 };
 
-/* Client side */
-
 int stats_cl(struct net_data *data, char *msg, int sock_fd)
 {
 #ifdef DEBUG
@@ -145,7 +143,7 @@ int get_ans_sync(struct net_data *data)
 	FD_SET(data->fd, &read_fds);
 
 	while (timeout) {
-		ret = select(data->fd + 1, &read_fds, NULL, NULL, &tv);
+		ret = select(FD_SETSIZE, &read_fds, NULL, NULL, &tv);
 		if (ret == -1) {
 			perror("select");
 			exit(EXIT_FAILURE);
