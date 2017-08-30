@@ -26,7 +26,7 @@
 #define PING_ID 0x6
 
 #define QUEUE_SIZE 5
-#define TIMEOUT 5
+#define TIMEOUT 10
 
 #define SRV_ADDR "127.0.0.1"
 #define PORT 9734

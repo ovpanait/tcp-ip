@@ -78,7 +78,7 @@ int get_ans_sync(struct net_data *data)
 		}
 
 		if (FD_ISSET(data->fd, &read_fds) == 0) {
-			tv.tv_sec = 1;
+			tv.tv_sec = 5;
 			tv.tv_usec = 0;
 
 			--timeout;
