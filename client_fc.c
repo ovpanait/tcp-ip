@@ -15,14 +15,14 @@
 #include "common.h"
 
 struct command commands[] = {
-	{"add", LIST_ADD_ID, &add_cl},
-	{"del", LIST_DEL_ID, &del_cl},
-	{"stats", LIST_STATS_ID, &stats_cl},
-	{"padd", PADD_ID, &padd_cl},
-	{"pread", PREAD_ID, &pread_cl},
-	{"ping", PING_ID, &ping_cl},
-	{"exit", 0, &exit_cli},
-	{"", 0, NULL}
+	{"add", LIST_ADD_ID, ARG, &add_cl},
+	{"del", LIST_DEL_ID, ARG, &del_cl},
+	{"stats", LIST_STATS_ID, NO_ARG, &stats_cl},
+	{"padd", PADD_ID, ARG, &padd_cl},
+	{"pread", PREAD_ID, NO_ARG, &pread_cl},
+	{"ping", PING_ID, NO_ARG, &ping_cl},
+	{"exit", 0, NO_ARG, &exit_cli},
+	{"", 0, NO_ARG, NULL}
 };
 
 /* All functions that send requests to the server share the same format.
@@ -191,16 +191,24 @@ int parse_line(char *cmd, char *arg)
 	return 0;
 }
 
-struct command *get_cmdp(char *cmd)
+struct command *get_cmdp(char *cmd, char *arg)
 {
+	struct command *p;
+	short arg_flag;
+	
 	DEBUG_PRINT("Entering function %s\n", __func__);
 
-	struct command *p;
-
+	arg_flag = *arg ? ARG : NO_ARG;
 	p = commands;
 	while (*(p->name)) {
-		if (strcmp(p->name, cmd) == 0)
-			return p;
+		if (strcmp(p->name, cmd) == 0) {
+			if (arg_flag == p->arg_f)
+				return p;
+
+			printf("Please provide an argument to the command\n");
+			return NULL;
+		}
+		
 		++p;
 	}
 

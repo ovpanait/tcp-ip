@@ -103,7 +103,7 @@ int main(int argc, char **argv)
 		}
 
 		/* Check whether cmd is a valid command */
-		cmdp = get_cmdp(cmd);
+		cmdp = get_cmdp(cmd, arg);
 		if (cmdp == NULL) {
 			printf("Invalid command\n");
 			continue;

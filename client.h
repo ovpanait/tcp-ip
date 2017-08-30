@@ -6,9 +6,13 @@
 extern int len;
 extern struct sockaddr_in address;
 
+#define NO_ARG 0
+#define ARG 1
+
 struct command {
 	char name[7];
 	uint16_t id;
+	short arg_f;
 	int (*fc) (struct net_data *, char *);
 };
 
@@ -25,6 +29,6 @@ int exit_cli(struct net_data *data, char *msg);
 int get_ans_sync(struct net_data *data);
 
 int parse_line(char *cmd, char *arg);
-struct command *get_cmdp(char *cmd);
+struct command *get_cmdp(char *cmd, char *arg);
 
 #endif
