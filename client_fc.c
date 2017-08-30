@@ -153,9 +153,12 @@ int parse_line(char *cmd, char *arg)
 	while (*p && *p != '\n' && isspace(*p))
 		++p;
 
-	if (*p == '\0' || isspace(*p))
+	if (*p == '\0') 
 		return -EINVAL;
 
+	if (isspace(*p))
+		return -EAGAIN;
+	
 	/* Fill cmd buffer */
 	while (*p && !isspace(*p))
 		*cmd++ = *p++;

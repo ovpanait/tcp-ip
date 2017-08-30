@@ -97,8 +97,13 @@ int main(int argc, char **argv)
 		printf(">");
 		
 		/* Parse input, retrieving command and argument */
-		if (parse_line(cmd, arg) == -EINVAL) {
+		switch(parse_line(cmd, arg)) {
+		case -EINVAL:
+			/* Unbalanced double quotes or input too long */
 			printf("Invalid input format\n");
+			continue;
+		case -EAGAIN:
+			/* No input */
 			continue;
 		}
 
