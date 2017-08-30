@@ -80,17 +80,17 @@ int get_ans_sync(struct net_data *data)
 		FD_ZERO(&read_fds);
 		FD_SET(data->fd, &read_fds);
 
+		tv.tv_sec = 5;
+		tv.tv_usec = 0;
+
 		ret = select(FD_SETSIZE, &read_fds, NULL, NULL, &tv);
 		if (ret == -1) {
 			perror("select");
 			exit(EXIT_FAILURE);
 		}
 
-		if (FD_ISSET(data->fd, &read_fds) == 0) {
-			tv.tv_sec = 5;
-			tv.tv_usec = 0;
-
-			--timeout;
+		if (FD_ISSET(data->fd, &read_fds) == 0) {			
+			timeout -= 5;
 			printf("%d seconds until timeout.\n", timeout);
 		} else {
 			/* Received message from server */
