@@ -94,6 +94,8 @@ int main(int argc, char **argv)
 		struct net_data data;
 		struct command *cmdp;
 
+		printf(">");
+		
 		/* Parse input, retrieving command and argument */
 		if (parse_line(cmd, arg) == -EINVAL) {
 			printf("Invalid input format\n");

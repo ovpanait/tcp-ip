@@ -248,7 +248,7 @@ static ssize_t page_write(struct file *file, const char __user *buf,
 	ret = simple_write_to_buffer(page_buf, PAGE_SIZE, ppos, buf, len);
 	if (ret != len) {
 		ret = -EINVAL;
-		pr_debug("Failed to write to buffer\n");
+		pr_err("Failed to write to buffer\n");
 	}
 
 	size = *ppos;
