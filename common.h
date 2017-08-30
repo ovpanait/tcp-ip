@@ -3,6 +3,13 @@
 
 #include <sys/types.h>
 
+/* Debug macros */
+#ifdef DEBUG
+#define DEBUG_PRINT(...) do { fprintf(stderr, __VA_ARGS__); } while(0)
+#else
+#define DEBUG_PRINT(...) do {} while(0)
+#endif
+
 #define MAGIC_NR 0x123
 /* Retrieve magic number form header */
 #define GET_MAGIC(x) \

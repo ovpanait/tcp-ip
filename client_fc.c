@@ -25,100 +25,30 @@ struct command commands[] = {
 	{"", 0, NULL}
 };
 
-int stats_cl(struct net_data *data, char *msg, int sock_fd)
-{
-#ifdef DEBUG
-	printf("Entering function: %s.\n", __func__);
-#endif
+/* All functions that send requests to the server share the same format.
+ * Use a macro.
+ */
+#define									\
+	REQUEST_FC(name, id)						\
+	int name##_cl (struct net_data *data, char *msg, int sock_fd)	\
+	{								\
+ 		DEBUG_PRINT("Entering function: %s\n", __func__);	\
+									\
+		net_data_init(data, id, msg, sock_fd);			\
+		send_net_data(data);					\
+									\
+		DEBUG_PRINT("Exiting function: %s\n", __func__);	\
+	        return 0;					        \
+	}
 
-	net_data_init(data, LIST_STATS_ID, NULL, sock_fd);
-	send_net_data(data);
+REQUEST_FC(stats, LIST_STATS_ID)
+REQUEST_FC(add, LIST_ADD_ID)
+REQUEST_FC(del, LIST_DEL_ID)
+REQUEST_FC(padd, PADD_ID)
+REQUEST_FC(pread, PREAD_ID)
+REQUEST_FC(ping, PING_ID)
 
-#ifdef DEBUG
-	printf("Exiting function: %s.\n", __func__);
-#endif
-
-	return 0;
-}
-
-int add_cl(struct net_data *data, char *msg, int sock_fd)
-{
-#ifdef DEBUG
-	printf("Exiting function: %s.\n", __func__);
-#endif
-	net_data_init(data, LIST_ADD_ID, msg, sock_fd);
-	send_net_data(data);
-
-#ifdef DEBUG
-	printf("Exiting function: %s.\n", __func__);
-#endif
-	return 0;
-}
-
-int del_cl(struct net_data *data, char *msg, int sock_fd)
-{
-#ifdef DEBUG
-	printf("Entering function: %s.\n", __func__);
-#endif
-
-	net_data_init(data, LIST_DEL_ID, msg, sock_fd);
-	send_net_data(data);
-
-#ifdef DEBUG
-	printf("Exiting function: %s.\n", __func__);
-#endif
-
-	return 0;
-}
-
-int padd_cl(struct net_data *data, char *msg, int sock_fd)
-{
-#ifdef DEBUG
-	printf("Entering function: %s.\n", __func__);
-#endif
-
-	net_data_init(data, PADD_ID, msg, sock_fd);
-	send_net_data(data);
-
-#ifdef DEBUG
-	printf("Exiting function: %s.\n", __func__);
-#endif
-
-	return 0;
-}
-
-int pread_cl(struct net_data *data, char *msg, int sock_fd)
-{
-#ifdef DEBUG
-	printf("Entering function: %s.\n", __func__);
-#endif
-
-	net_data_init(data, PREAD_ID, NULL, sock_fd);
-	send_net_data(data);
-
-#ifdef DEBUG
-	printf("Exiting function: %s.\n", __func__);
-#endif
-
-	return 0;
-}
-
-int ping_cl(struct net_data *data, char *msg, int sock_fd)
-{
-#ifdef DEBUG
-	printf("Entering function: %s.\n", __func__);
-#endif
-
-	net_data_init(data, PING_ID, NULL, sock_fd);
-	send_net_data(data);
-
-#ifdef DEBUG
-	printf("Exiting function: %s.\n", __func__);
-#endif
-
-	return 0;
-}
-
+/* Close command line interface */
 int exit_cli(struct net_data *data, char *msg, int sock_fd)
 {
 	printf("Exiting CLI......\n");
@@ -133,12 +63,10 @@ int get_ans_sync(struct net_data *data)
 	int ret;
 	struct timeval tv;
 
-#ifdef DEBUG
-	printf("Entering function: %s.\n", __func__);
-#endif
+	DEBUG_PRINT("Entering function %s\n", __func__);
 
 	timeout = TIMEOUT;
-	
+
 	while (timeout) {
 		FD_ZERO(&read_fds);
 		FD_SET(data->fd, &read_fds);
@@ -182,9 +110,7 @@ int get_ans_sync(struct net_data *data)
 	/* Timeout occurred - TODO */
 	printf("Timeout\n");
 
-#ifdef DEBUG
-	printf("Exiting function: %s.\n", __func__);
-#endif
+	DEBUG_PRINT("Exiting function %s\n", __func__);
 
 	return -1;
 }
@@ -197,9 +123,7 @@ int parse_line(char *cmd, char *arg)
 	char line[MAX_LINE];
 	char *p;
 
-#ifdef DEBUG
-	printf("Entering function: %s.\n", __func__);
-#endif
+	DEBUG_PRINT("Entering function %s\n", __func__);
 
 	p = fgets(line, MAX_LINE, stdin);
 	if (p == NULL) {
@@ -249,9 +173,7 @@ int parse_line(char *cmd, char *arg)
 	}
 	*arg = '\0';
 
-#ifdef DEBUG
-	printf("Exiting function: %s.\n", __func__);
-#endif
+	DEBUG_PRINT("Exiting function %s\n", __func__);
 
 	/* Check for unbalanced double quotes */
 	if (quote)
@@ -262,9 +184,7 @@ int parse_line(char *cmd, char *arg)
 
 struct command *get_cmdp(char *cmd)
 {
-#ifdef DEBUG
-	printf("Entering function: %s.\n", __func__);
-#endif
+	DEBUG_PRINT("Entering function %s\n", __func__);
 
 	struct command *p;
 
@@ -275,9 +195,7 @@ struct command *get_cmdp(char *cmd)
 		++p;
 	}
 
-#ifdef DEBUG
-	printf("Exiting function: %s.\n", __func__);
-#endif
+	DEBUG_PRINT("Exiting function %s\n", __func__);
 
 	return NULL;
 }
