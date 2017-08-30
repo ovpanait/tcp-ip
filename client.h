@@ -3,21 +3,24 @@
 
 #include "common.h"
 
+extern int len;
+extern struct sockaddr_in address;
+
 struct command {
 	char name[7];
 	uint16_t id;
-	int (*fc) (struct net_data *, char *, int);
+	int (*fc) (struct net_data *, char *);
 };
 
 extern struct command commands[];
 
-int stats_cl(struct net_data *data, char *msg, int sock_fd);
-int add_cl(struct net_data *data, char *msg, int sock_fd);
-int ping_cl(struct net_data *data, char *msg, int sock_fd);
-int pread_cl(struct net_data *data, char *msg,  int sock_fd);
-int padd_cl(struct net_data *data, char *msg, int sock_fd);
-int del_cl(struct net_data *data, char *msg, int sockf_fd);
-int exit_cli(struct net_data *data, char *msg, int sockf_fd);
+int stats_cl(struct net_data *data, char *msg);
+int add_cl(struct net_data *data, char *msg);
+int ping_cl(struct net_data *data, char *msg);
+int pread_cl(struct net_data *data, char *msg);
+int padd_cl(struct net_data *data, char *msg);
+int del_cl(struct net_data *data, char *msg);
+int exit_cli(struct net_data *data, char *msg);
 
 int get_ans_sync(struct net_data *data);
 

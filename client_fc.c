@@ -28,17 +28,26 @@ struct command commands[] = {
 /* All functions that send requests to the server share the same format.
  * Use a macro.
  */
-#define									\
-	REQUEST_FC(name, id)						\
-	int name##_cl (struct net_data *data, char *msg, int sock_fd)	\
+#define REQUEST_FC(name, id)						\
+	int name##_cl (struct net_data *data, char *msg)		\
 	{								\
- 		DEBUG_PRINT("Entering function: %s\n", __func__);	\
+		int result;						\
+		int sock_fd;						\
+									\
+		DEBUG_PRINT("Entering function: %s\n", __func__);	\
+									\
+		sock_fd = socket(AF_INET, SOCK_STREAM, 0);		\
+		result = connect(sock_fd, (struct sockaddr *)&address, len); \
+		if(result == -1) {					\
+			perror("connect");				\
+			exit(EXIT_FAILURE);				\
+		}							\
 									\
 		net_data_init(data, id, msg, sock_fd);			\
 		send_net_data(data);					\
 									\
 		DEBUG_PRINT("Exiting function: %s\n", __func__);	\
-	        return 0;					        \
+		return 0;						\
 	}
 
 REQUEST_FC(stats, LIST_STATS_ID)
@@ -49,7 +58,7 @@ REQUEST_FC(pread, PREAD_ID)
 REQUEST_FC(ping, PING_ID)
 
 /* Close command line interface */
-int exit_cli(struct net_data *data, char *msg, int sock_fd)
+int exit_cli(struct net_data *data, char *msg)
 {
 	printf("Exiting CLI......\n");
 	exit(EXIT_SUCCESS);

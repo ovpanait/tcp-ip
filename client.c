@@ -15,16 +15,14 @@
 #include "common.h"
 #include "client.h"
 
+int len;
+int sock_fd;
+struct sockaddr_in address;
 static char *buf;
 static int cli_flag;
 
 int main(int argc, char **argv)
 {
-	int len;
-	int sock_fd;
-	struct sockaddr_in address;
-	int result;
-
 	char cmd[MAX_LINE], arg[MAX_LINE];
 
 	/* Command line parameter parsing */
@@ -60,34 +58,27 @@ int main(int argc, char **argv)
 	       (opt != '?')) {
 		struct net_data data;
 
-		sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-		result = connect(sock_fd, (struct sockaddr *)&address, len);
-		if(result == -1) {
-			perror("connect");
-			exit(EXIT_FAILURE);
-		}
-
 		switch (opt) {
 		case 's':
-			stats_cl(&data, NULL, sock_fd);
+			stats_cl(&data, NULL);
 			break;
 		case 'a':
-			add_cl(&data, optarg, sock_fd);
+			add_cl(&data, optarg);
 			break;
 		case 'd':
-			del_cl(&data, optarg, sock_fd);
+			del_cl(&data, optarg);
 			break;
 		case 'p':
-			padd_cl(&data, optarg, sock_fd);
+			padd_cl(&data, optarg);
 			break;
 		case 'r':
-			pread_cl(&data, NULL, sock_fd);
+			pread_cl(&data, NULL);
 			break;
 		case 'c':
 			cli_flag = 1;
 			continue;
 		case 't':
-			ping_cl(&data, NULL, sock_fd);
+			ping_cl(&data, NULL);
 			break;
 		}
 
@@ -117,14 +108,7 @@ int main(int argc, char **argv)
 		}
 
 		/* Send request and get answer */
-		sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-		result = connect(sock_fd, (struct sockaddr *)&address, len);
-		if(result == -1) {
-			perror("connect");
-			exit(EXIT_FAILURE);
-		}
-
-		cmdp->fc(&data, arg, sock_fd);
+		cmdp->fc(&data, arg);
 		get_ans_sync(&data);
 	}
 
