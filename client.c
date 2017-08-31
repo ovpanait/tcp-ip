@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 {
 	char cmd[MAX_LINE], arg[MAX_LINE];
 
-	/* Command line parameter parsing */
+	/* Command line parameters */
 	int opt;
 	struct option longopts[] = {
 		{"stats", 0, NULL, 's'},
@@ -38,9 +38,8 @@ int main(int argc, char **argv)
 		{0, 0, 0, 0} };
 
 	/*  Name the socket, as agreed with the server.  */
-
 	address.sin_family = AF_INET;
-	address.sin_addr.s_addr = inet_addr("128.224.124.169");
+	address.sin_addr.s_addr = inet_addr("192.168.1.6");
 	address.sin_port = htons(PORT);
 	len = sizeof(address);
 
@@ -53,7 +52,6 @@ int main(int argc, char **argv)
 	buf[page_size - 1] = '\0';
 
 	/* Perform operations based on command line parameters */
-
 	while ((opt = getopt_long_only(argc, argv, "", longopts, NULL)) != -1 &&
 	       (opt != '?')) {
 		struct net_data data;

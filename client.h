@@ -3,9 +3,6 @@
 
 #include "common.h"
 
-extern int len;
-extern struct sockaddr_in address;
-
 #define NO_ARG 0
 #define ARG 1
 
@@ -16,6 +13,8 @@ struct command {
 	int (*fc) (struct net_data *, char *);
 };
 
+extern int len;
+extern struct sockaddr_in address;
 extern struct command commands[];
 
 int stats_cl(struct net_data *data, char *msg);

@@ -202,7 +202,7 @@ int ldel_sv(struct net_data *data, char *buf)
 		buf_tmp += ret;
 	}
 
-	sprintf(buf, "Deleted element form list\n");
+	sprintf(buf, "Performed deletion\n");
 
 send:
 	net_data_init(data, LIST_DEL_ID, buf, data->fd);
